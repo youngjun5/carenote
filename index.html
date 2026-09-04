@@ -1878,35 +1878,37 @@
   }
 
   function linkBody(c, body) {
-    if (c.url) {
+    if (c.url && !c._editing) {
       var a = h("a", "link-card", { href: c.url, target: "_blank", rel: "noopener noreferrer" });
       var u = h("div", "link-url"); u.textContent = c.url;
       a.appendChild(u);
       if (c.desc) { var d = h("div", "link-desc"); d.textContent = c.desc; a.appendChild(d); }
       var o = h("div", "link-open"); o.textContent = "새 탭에서 열기 ↗"; a.appendChild(o);
       a.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
-      if (!readOnly) {
-        var edit = h("button", "additem"); edit.textContent = "링크 수정";
-        edit.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
-        edit.addEventListener("click", function () { c._editing = true; buildBody(body, c); });
-        var frag = document.createDocumentFragment(); frag.appendChild(a);
-        if (!c._editing) { frag.appendChild(edit); return wrapFrag(frag); }
-      }
-      if (!c._editing) return a;
+      return a;
+      // 수정은 버튼 없이 카드 메뉴(⋮) → "링크 수정"에서
     }
-    var form = h("div", "");
+    var form = h("div", "link-form");
     var uu = h("input", "field", { placeholder: "https://…", value: c.url || "", spellcheck: "false" });
     var dd = h("textarea", "field", { placeholder: "설명 (선택)", spellcheck: "false" }); dd.value = c.desc || ""; dd.style.resize = "vertical";
     [uu, dd].forEach(function (x) { x.disabled = readOnly; x.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); });
-    var ok = h("button", "additem"); ok.textContent = "완료";
-    ok.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
-    ok.addEventListener("click", function () {
+    function commit() {
+      if (readOnly) return;
       var v = uu.value.trim();
-      if (v && !/^https?:\/\//i.test(v)) v = "https://" + v;
+      if (!v) { c._editing = false; return; }  // 빈 채로 벗어나면 그냥 조용히 취소 (버튼 없이 자동 확정이라 실수 방지)
+      if (!/^https?:\/\//i.test(v)) v = "https://" + v;
       c.url = v; c.desc = dd.value.trim(); c._editing = false;
       buildBody(form.parentNode, c); markDirty();
+    }
+    uu.addEventListener("keydown", function (e) {
+      if (readOnly || e.isComposing) return;
+      if (e.key === "Enter") { e.preventDefault(); commit(); }
     });
-    form.appendChild(uu); form.appendChild(dd); form.appendChild(ok);
+    form.addEventListener("focusout", function (e) {
+      if (readOnly || form.contains(e.relatedTarget)) return;
+      commit();
+    });
+    form.appendChild(uu); form.appendChild(dd);
     return form;
   }
   function wrapFrag(frag) { var d = document.createElement("div"); d.appendChild(frag); return d; }
@@ -2059,6 +2061,13 @@
         arow.appendChild(ab);
       });
       m.appendChild(arow);
+    }
+
+    if (!readOnly && c.type === "link" && c.url) {
+      m.appendChild(h("div", "msep"));
+      var editLink = h("button", "mi"); editLink.textContent = "링크 수정";
+      editLink.onclick = function () { c._editing = true; rebuildCard(c.id); closeCtx(); };
+      m.appendChild(editLink);
     }
 
     m.appendChild(h("div", "msep"));
@@ -2314,7 +2323,7 @@
     state.cards[c.id] = c;
     render(); select(c.id); markDirty();
     var el = cardLayer.querySelector('[data-id="' + c.id + '"]');
-    var f = el && el.querySelector(".card-title, .label-input, .shape-label");
+    var f = el && el.querySelector(".card-title, .label-input, .field");
     if (f) f.focus();
     return c;
   }
