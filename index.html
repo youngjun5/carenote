@@ -1013,13 +1013,18 @@
         restoredDraft = true;
         restoredAt = draftTime;
         // 고정 키로 다시 저장해두고, 옛 키는 정리(단, 복원 성공 후에만).
-        try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ baseRev: embedded.rev, state: state, savedAt: now() })); } catch (e3) {}
+        // savedAt은 now()가 아니라 원래 시점(draftTime) 그대로 유지 — 여기서 지금 시각으로
+        // 새로 찍으면, 실제로는 오래된 내용인데 "방금 저장됨"처럼 보여서 이후의 최신/충돌 비교가 다 틀어짐.
+        try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ baseRev: embedded.rev, state: state, savedAt: draftTime })); } catch (e3) {}
         for (var j = 0; j < staleKeys.length; j++) {
           try { localStorage.removeItem(staleKeys[j]); } catch (e4) {}
         }
       }
     } catch (e) { /* ignore */ }
   })();
+  // 내가(이 탭이) 마지막으로 저장한 시점 — 다른 탭/창이 그 사이에 먼저 저장했는지 확인하는 기준.
+  var mySavedAt = restoredDraft ? restoredAt : (embedded.publishedAt || 0);
+  var _conflictWarned = false;
 
   function readEmbedded() {
     // board-state 스크립트 태그는 원래 단일 보드 시절의 baseline이라 "default" 보드에만 해당됨.
@@ -1233,9 +1238,26 @@
     document.body.classList.toggle("save-risk", !!bad);
   }
   function saveDraftNow() {
+    // 다른 탭/창이 이 보드를 이미 나보다 나중에 저장해뒀는지 확인 — 있으면 내가 지금 덮어쓰지 않음
+    // (안 그러면 여러 창을 오가며 작업할 때 한쪽 창의 내용이 조용히 사라지는 사고가 남).
+    try {
+      var existingRaw = localStorage.getItem(DRAFT_KEY);
+      if (existingRaw) {
+        var existing = JSON.parse(existingRaw);
+        if (existing && typeof existing.savedAt === "number" && existing.savedAt > mySavedAt + 500) {
+          if (!_conflictWarned) {
+            _conflictWarned = true;
+            toast("⚠ 다른 창/탭에서 이 보드를 방금 저장했어요. 이 창의 저장은 건너뛰었어요 — 새로고침해서 최신 내용을 확인해주세요.", "새로고침", function () { location.reload(); }, 30000);
+          }
+          return;
+        }
+      }
+    } catch (e) {}
     touchBoardIndex(activeBoardId, state.title);
-    lastSavedAt = now();
-    var payload = JSON.stringify({ baseRev: embedded.rev, state: state, savedAt: now() });
+    var savedAtNow = now();
+    lastSavedAt = savedAtNow;
+    mySavedAt = savedAtNow;
+    var payload = JSON.stringify({ baseRev: embedded.rev, state: state, savedAt: savedAtNow });
     var lsOk = false;
     try {
       localStorage.setItem(DRAFT_KEY, payload);
@@ -3410,6 +3432,7 @@
       var idbTime = d.savedAt || 0;
       var curTime = restoredDraft ? restoredAt : (embedded.publishedAt || 0);
       if (idbTime > curTime) {
+        mySavedAt = idbTime;
         applyFullRestore({ state: d.state }, "이 브라우저에 저장된 더 최신 내용을 불러왔어요 (" + fmtAgo(idbTime) + " 저장됨).");
         return;
       }
