@@ -1243,19 +1243,16 @@
     } catch (e) {
       try { localStorage.removeItem(DRAFT_KEY); } catch (e2) {}
     }
-    // 큰 보드거나 localStorage 실패 시 IndexedDB 에 저장하고 성공 여부 확인
-    if (!lsOk || payload.length > 2.5 * 1024 * 1024) {
-      idbSet(DRAFT_KEY, payload).then(function (idbOk) {
-        var safe = lsOk || idbOk;
-        setSaveWarn(!safe);
-        if (!safe && !_quotaWarned) {
-          _quotaWarned = true;
-          toast("⚠ 이 브라우저에 자동 저장이 안 됩니다 (이미지 용량 초과). 지금 바로 '팀에 게시'를 눌러 서버에 저장하세요 — 새로고침하면 사라집니다.", "지금 팀에 게시", function () { publishBtn.click(); }, 20000);
-        }
-      });
-    } else {
-      setSaveWarn(false);
-    }
+    // IndexedDB에도 항상 같이 저장해둠 (localStorage 용량 초과로 조용히 못 쓰는 경우의 안전망 —
+    // 예전엔 이게 fallback으로만 동작해서, 부팅 시 localStorage만 훑는 로직이 이걸 놓치는 버그가 있었음)
+    idbSet(DRAFT_KEY, payload).then(function (idbOk) {
+      var safe = lsOk || idbOk;
+      setSaveWarn(!safe);
+      if (!safe && !_quotaWarned) {
+        _quotaWarned = true;
+        toast("⚠ 이 브라우저에 자동 저장이 안 됩니다 (이미지 용량 초과). 지금 바로 '저장'을 눌러보세요 — 새로고침하면 사라집니다.", "저장", function () { publishBtn.click(); }, 20000);
+      }
+    });
   }
   function scheduleSave() {
     clearTimeout(saveTimer);
@@ -1313,7 +1310,7 @@
     });
     return found ? (found.items || []) : [];
   }
-  function applyFullRestore(bk) {
+  function applyFullRestore(bk, msg) {
     state = JSON.parse(JSON.stringify(bk.state));
     state.cards = state.cards || {}; state.conns = state.conns || {};
     state.ink = Array.isArray(state.ink) ? state.ink : [];
@@ -1323,7 +1320,7 @@
     document.body.classList.add("dirty"); publishBtn.classList.add("dirty"); updatePublishMeta();
     scheduleSave();
     closeRecover();
-    toast("전체 복원했습니다. 확인 후 '팀에 게시'로 저장하세요.", "팀에 게시", function () { publishBtn.click(); }, 12000);
+    toast(msg || "전체 복원했습니다. 확인 후 '저장'을 눌러주세요.", "저장", function () { publishBtn.click(); }, 12000);
   }
   var restoreBannerEl = null;
   function showRestoreBanner(d, bs) {
@@ -3400,23 +3397,31 @@
   var srb = document.getElementById("saveRiskBtn");
   if (srb) srb.addEventListener("click", function () { publishBtn.click(); });
 
-  // 로드 후(초기 렌더 끝난 뒤) IndexedDB 저장본을 가볍게 확인 — 지금 화면보다 이미지/카드가 많으면 안내 배너
+  // 로드 직후 IndexedDB 저장본 확인.
+  // localStorage 용량 초과(큰 보드에 이미지 많을 때 흔함)로 저장이 IndexedDB로만 들어갔을 수 있는데,
+  // 부팅 시 localStorage만 훑는 loadDraft()는 이걸 놓친다 — 그래서 방금 '저장'을 눌렀는데도
+  // 새로고침하면 더 오래된 localStorage 초안이 뜨는 버그가 있었음.
+  // 시간상 IndexedDB 쪽이 더 최신이면 묻지 않고 바로 그걸 적용(진짜 최신본이라 애매할 게 없음).
   if (!readOnly) {
-    setTimeout(function () {
-      idbGet(DRAFT_KEY).then(function (raw) {
-        if (!raw) return;
-        var d; try { d = JSON.parse(raw); } catch (e) { return; }
-        if (!d || !d.state || typeof d.state !== "object") return;
-        var cur = stateStats(state);
-        var bs;
-        try { bs = stateStats(d.state); } catch (e2) { return; }
-        var richer = bs.images > cur.images || bs.cards > cur.cards + 1 ||
-          bs.contingency > cur.contingency || bs.items > cur.items + 2 || bs.textLen > cur.textLen * 1.2;
-        if (!richer) return;
-        document.body.classList.add("has-backup");
-        showRestoreBanner(d, bs);
-      });
-    }, 700);
+    idbGet(DRAFT_KEY).then(function (raw) {
+      if (!raw) return;
+      var d; try { d = JSON.parse(raw); } catch (e) { return; }
+      if (!d || !d.state || typeof d.state !== "object") return;
+      var idbTime = d.savedAt || 0;
+      var curTime = restoredDraft ? restoredAt : (embedded.publishedAt || 0);
+      if (idbTime > curTime) {
+        applyFullRestore({ state: d.state }, "이 브라우저에 저장된 더 최신 내용을 불러왔어요 (" + fmtAgo(idbTime) + " 저장됨).");
+        return;
+      }
+      var cur = stateStats(state);
+      var bs;
+      try { bs = stateStats(d.state); } catch (e2) { return; }
+      var richer = bs.images > cur.images || bs.cards > cur.cards + 1 ||
+        bs.contingency > cur.contingency || bs.items > cur.items + 2 || bs.textLen > cur.textLen * 1.2;
+      if (!richer) return;
+      document.body.classList.add("has-backup");
+      showRestoreBanner(d, bs);
+    });
   }
   // 폰트 로딩 후 카드 높이 재측정 (스크롤 없는 자동 높이)
   function remeasureAll() { Object.keys(state.cards).forEach(function (id) { refreshCardHeight(id); }); }
