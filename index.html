@@ -2558,6 +2558,10 @@
   function makeDraggable(handle, c, onTap) {
     handle.addEventListener("pointerdown", function (e) {
       if (connectMode || drawMode) return;
+      // 이미 다른 손가락이 캔버스에 닿아있으면(=핀치 시작) 카드/이미지 쪽에서 가로채지 않고
+      // 캔버스의 두 손가락 확대/축소 로직으로 넘김 — 안 그러면 손가락이 이미지 위에 있을 때
+      // 핀치 확대가 전혀 안 먹는 문제가 있었음.
+      if (e.pointerType === "touch" && Object.keys(gPts).length >= 1) return;
       if (e.button !== 0 || e.shiftKey) return;
       if (readOnly && !onTap) return;
       e.stopPropagation();
@@ -2981,12 +2985,16 @@
   function tMid(a, b) { return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
 
   canvas.addEventListener("pointerdown", function (e) {
+    // 이미 손가락 하나가 눌려있는 상태에서 두 번째 손가락이 내려오는 거면(=핀치 시작),
+    // 그 손가락이 카드/이미지 위에 떨어지더라도 무조건 핀치로 인식 — 카드가 빽빽한 보드에서
+    // 손가락 하나가 카드 위에 얹히면 확대/축소가 아예 안 먹던 버그.
+    var startingSecondTouch = e.pointerType === "touch" && Object.keys(gPts).length === 1;
     var onCardOrUI = e.target.closest(".card") || e.target.closest(".ctxmenu") || e.target.closest("#conns") ||
         e.target.closest("#connEdit") || e.target.closest("#connDel") || e.target.closest("#drawBar");
     // 보기 전용(모바일)에서는 카드 위 터치도 화면 이동으로 (이미지 탭 확대는 img click 이 따로 처리)
     var mvTouchPan = readOnly && e.pointerType === "touch" && !e.target.closest(".img-el") &&
         !e.target.closest(".ctxmenu") && !e.target.closest("#connDel");
-    if (onCardOrUI && !mvTouchPan) return;
+    if (onCardOrUI && !mvTouchPan && !startingSecondTouch) return;
     closeCtx();
     if (drawMode) return;   // #drawCapture 가 처리
 
