@@ -462,6 +462,31 @@
   .card.label .kebab:hover { background: rgba(128,128,128,0.22); opacity: 1; }
   .card.label .label-drag { cursor: grab; padding: 6px 2px 6px 8px; color: var(--label-ink, #fff); opacity: 0.7; display: grid; place-items: center; flex: none; }
 
+  /* ---------- shape / icon (도형·아이콘) ---------- */
+  .card.shape, .card.icon {
+    background: transparent; border: none; box-shadow: none; overflow: visible;
+  }
+  .card.shape::before, .card.icon::before { display: none; }
+  .card.shape.sel .shape-svg { outline: 2px dashed var(--accent); outline-offset: 3px; }
+  .card.icon.sel .icon-emoji { outline: 2px dashed var(--accent); outline-offset: 3px; border-radius: 6px; }
+  .shape-svg { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; overflow: visible; }
+  .card.shape .kebab, .card.icon .kebab {
+    position: absolute; top: -4px; right: -4px; opacity: 0; background: var(--surface);
+    border: 1px solid var(--hair); box-shadow: var(--shadow-1);
+  }
+  .card.shape:hover .kebab, .card.shape.sel .kebab,
+  .card.icon:hover .kebab, .card.icon.sel .kebab { opacity: 1; }
+  .card.icon { container-type: size; }
+  .icon-emoji {
+    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+    font-size: 60cqh; line-height: 1; cursor: grab; filter: grayscale(1) contrast(1.15);
+    -webkit-user-select: none; user-select: none;
+  }
+  .ctxmenu .icon-sw {
+    width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+    font-size: 15px; filter: grayscale(1); background: var(--surface-2);
+  }
+
   .card-foot {
     flex: none; display: flex; align-items: center; padding: 4px 8px;
     opacity: 0; transition: opacity 0.12s;
@@ -707,6 +732,14 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 8a2 2 0 0 1 2-2h9l7 6-7 6H5a2 2 0 0 1-2-2z"/><circle cx="8" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg>
       <span class="tip">라벨 / 구역</span>
     </button>
+    <button class="rbtn" data-add="shape" aria-label="도형 추가">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="8" height="8" rx="1"/><circle cx="16.5" cy="16.5" r="4.5"/></svg>
+      <span class="tip">도형 (사각형·원·화살표…)</span>
+    </button>
+    <button class="rbtn" data-add="icon" aria-label="아이콘 추가">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 8.5 6.5 6h3L11 4h2l1.5 2h3L22 8.5V18a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 4 18z"/><circle cx="12" cy="12.5" r="3.4"/></svg>
+      <span class="tip">아이콘 (카메라 등)</span>
+    </button>
     <div class="rail-sep"></div>
     <button class="rbtn" id="connectBtn" aria-label="카드 연결">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8 8c5 1 7 3 8 8"/></svg>
@@ -876,18 +909,25 @@
     "tape-red": "#c8483d", "tape-blue": "#3a6ea5", "tape-green": "#5c8a4a",
     "tape-amber": "#d29a3a", "tape-plum": "#7a5b9c", "tape-slate": "#6b6f78"
   };
-  var TYPE_TAG = { note: "노트", todo: "체크리스트", column: "컬럼", image: "이미지", link: "링크", label: "라벨" };
+  var TYPE_TAG = { note: "노트", todo: "체크리스트", column: "컬럼", image: "이미지", link: "링크", label: "라벨", shape: "도형", icon: "아이콘" };
   // 라벨 글자색 선택지 (흰색 / 검정 + 배경과 같은 팔레트)
   var TEXT_COLORS = {
     white: "#ffffff", black: "#1c1c1c",
     "tape-red": "#c8483d", "tape-blue": "#3a6ea5", "tape-green": "#5c8a4a",
     "tape-amber": "#c98a2e", "tape-plum": "#7a5b9c", "tape-slate": "#5b5f68"
   };
+  // 촬영 큐시트 / 도면 배치도용 아이콘 팔레트 (표준 유니코드 이모지, 흑백 필터로 렌더)
+  var ICON_SET = ["📷", "🎥", "🎤", "🎙️", "🔦", "💡", "🪑", "🧍", "🖥️", "🔊",
+    "🎧", "🎬", "📍", "🔌", "🪟", "🚪", "➡️", "⬆️", "⬇️", "⬅️", "↔️", "⭐"];
   var DEFAULT_SIZE = {
     note: [270, 190], todo: [270, 210], column: [248, 285],
-    image: [260, 220], link: [268, 165], label: [240, 50]
+    image: [260, 220], link: [268, 165], label: [240, 50],
+    shape: [180, 140], icon: [72, 72]
   };
-  var MIN_SIZE = { note: [160, 90], todo: [170, 90], column: [170, 110], image: [56, 40], link: [170, 90], label: [120, 40] };
+  var MIN_SIZE = {
+    note: [160, 90], todo: [170, 90], column: [170, 110], image: [56, 40], link: [170, 90], label: [120, 40],
+    shape: [30, 30], icon: [32, 32]
+  };
 
   var PATH = location.pathname;
   // 초안 저장 키는 "고정"이어야 합니다. 예전엔 location.pathname을 붙였는데,
@@ -907,6 +947,8 @@
   var embedded = readEmbedded();
   var state = embedded;
   var dirty = false;
+  var standaloneMode = false;  // 게시(claude.ai) 기능이 없는 배포본이면 true — "게시" 버튼이 "저장" 역할로 바뀜
+  var lastSavedAt = 0;
   var readOnly = sessionStorage.getItem("contiboard:readonly:" + PATH) === "1";
   // 휴대폰 등 작은 터치 화면: 편집 없이 '보기 전용'으로
   var mobileView = false;
@@ -1174,6 +1216,7 @@
   }
   function saveDraftNow() {
     touchBoardIndex(activeBoardId, state.title);
+    lastSavedAt = now();
     var payload = JSON.stringify({ baseRev: embedded.rev, state: state, savedAt: now() });
     var lsOk = false;
     try {
@@ -1358,6 +1401,10 @@
   }
   function updatePublishMeta() {
     if (readOnly) { publishMeta.textContent = "읽기 전용 보기"; return; }
+    if (standaloneMode) {
+      publishMeta.textContent = lastSavedAt ? "저장됨 · " + fmtAgo(lastSavedAt) : "저장 안 됨";
+      return;
+    }
     var base;
     if (state.publishedAt) base = "게시됨 · " + fmtAgo(state.publishedAt);
     else base = "아직 게시 안 됨";
@@ -1472,7 +1519,8 @@
   }
 
   function buildCard(c) {
-    var el = h("div", "card" + (c.type === "label" ? " label" : ""), { "data-id": c.id });
+    var extraClass = c.type === "label" ? " label" : c.type === "shape" ? " shape" : c.type === "icon" ? " icon" : "";
+    var el = h("div", "card" + extraClass, { "data-id": c.id });
 
     el.addEventListener("pointerdown", function (e) {
       if (readOnly) return;   // 보기 전용: 선택·앞으로 안 함 (터치는 캔버스로 흘러가 화면 이동)
@@ -1497,6 +1545,63 @@
       });
       var kb = kebab(c, el);
       el.appendChild(grip); el.appendChild(li); el.appendChild(kb);
+      addResize(el, c);
+      return el;
+    }
+
+    if (c.type === "shape") {
+      var svgNS = "http://www.w3.org/2000/svg";
+      var svg = document.createElementNS(svgNS, "svg");
+      svg.setAttribute("class", "shape-svg");
+      svg.setAttribute("viewBox", "0 0 100 100");
+      svg.setAttribute("preserveAspectRatio", "none");
+      var kind = c.shapeKind || "rect";
+      var strokeOnly = kind === "line" || kind === "arrow";
+      var filled = !strokeOnly && c.fill !== false;
+      var shapeEl;
+      if (kind === "ellipse") {
+        shapeEl = document.createElementNS(svgNS, "ellipse");
+        shapeEl.setAttribute("cx", "50"); shapeEl.setAttribute("cy", "50");
+        shapeEl.setAttribute("rx", "47"); shapeEl.setAttribute("ry", "47");
+      } else if (kind === "triangle") {
+        shapeEl = document.createElementNS(svgNS, "polygon");
+        shapeEl.setAttribute("points", "50,4 96,96 4,96");
+      } else if (kind === "line" || kind === "arrow") {
+        shapeEl = document.createElementNS(svgNS, "line");
+        shapeEl.setAttribute("x1", "4"); shapeEl.setAttribute("y1", "96");
+        shapeEl.setAttribute("x2", "96"); shapeEl.setAttribute("y2", "4");
+        shapeEl.setAttribute("stroke-linecap", "round");
+        shapeEl.setAttribute("vector-effect", "non-scaling-stroke");
+        if (kind === "arrow") shapeEl.setAttribute("marker-end", "url(#arrow)");
+      } else {
+        shapeEl = document.createElementNS(svgNS, "rect");
+        shapeEl.setAttribute("x", "3"); shapeEl.setAttribute("y", "3");
+        shapeEl.setAttribute("width", "94"); shapeEl.setAttribute("height", "94");
+        shapeEl.setAttribute("rx", "4");
+      }
+      var colorVar = "var(--" + (c.color || "tape-slate") + ")";
+      if (strokeOnly || !filled) {
+        shapeEl.setAttribute("fill", "none");
+        shapeEl.setAttribute("stroke", colorVar);
+        shapeEl.setAttribute("stroke-width", "4");
+      } else {
+        shapeEl.setAttribute("fill", colorVar);
+        shapeEl.setAttribute("stroke", "none");
+      }
+      svg.appendChild(shapeEl);
+      makeDraggable(svg, c);
+      el.appendChild(svg);
+      el.appendChild(kebab(c, el));
+      addResize(el, c);
+      return el;
+    }
+
+    if (c.type === "icon") {
+      var iw = h("div", "icon-emoji");
+      iw.textContent = c.emoji || "📷";
+      makeDraggable(iw, c);
+      el.appendChild(iw);
+      el.appendChild(kebab(c, el));
       addResize(el, c);
       return el;
     }
@@ -1793,7 +1898,7 @@
     var uu = h("input", "field", { placeholder: "https://…", value: c.url || "", spellcheck: "false" });
     var dd = h("textarea", "field", { placeholder: "설명 (선택)", spellcheck: "false" }); dd.value = c.desc || ""; dd.style.resize = "vertical";
     [uu, dd].forEach(function (x) { x.disabled = readOnly; x.addEventListener("pointerdown", function (e) { e.stopPropagation(); }); });
-    var ok = h("button", "additem"); ok.textContent = "저장";
+    var ok = h("button", "additem"); ok.textContent = "완료";
     ok.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
     ok.addEventListener("click", function () {
       var v = uu.value.trim();
@@ -1877,17 +1982,55 @@
     var m = h("div", "ctxmenu");
     var isLabel = c.type === "label";
 
-    if (isLabel) { var cap1 = h("div", "sw-cap"); cap1.textContent = "배경색"; m.appendChild(cap1); }
-    var sw = h("div", "swatches");
-    Object.keys(PALETTE).forEach(function (name) {
-      var s = h("div", "sw" + (c.color === name ? " on" : ""));
-      s.style.background = PALETTE[name];
-      s.addEventListener("click", function () {
-        c.color = name; render(); markDirty(); closeCtx();
+    if (c.type !== "icon") {
+      if (isLabel) { var cap1 = h("div", "sw-cap"); cap1.textContent = "배경색"; m.appendChild(cap1); }
+      var sw = h("div", "swatches");
+      Object.keys(PALETTE).forEach(function (name) {
+        var s = h("div", "sw" + (c.color === name ? " on" : ""));
+        s.style.background = PALETTE[name];
+        s.addEventListener("click", function () {
+          c.color = name; render(); markDirty(); closeCtx();
+        });
+        sw.appendChild(s);
       });
-      sw.appendChild(s);
-    });
-    m.appendChild(sw);
+      m.appendChild(sw);
+    }
+
+    if (c.type === "shape") {
+      var scap = h("div", "sw-cap"); scap.textContent = "도형"; m.appendChild(scap);
+      var srow = h("div", "align-row");
+      [["rect", "사각형"], ["ellipse", "원/타원"], ["triangle", "삼각형"], ["line", "선"], ["arrow", "화살표"]].forEach(function (k) {
+        var sb = h("button", null, { type: "button" });
+        sb.textContent = k[1];
+        if ((c.shapeKind || "rect") === k[0]) sb.style.borderColor = "var(--accent)";
+        sb.addEventListener("click", function () { c.shapeKind = k[0]; render(); markDirty(); closeCtx(); });
+        srow.appendChild(sb);
+      });
+      m.appendChild(srow);
+      if (c.shapeKind !== "line" && c.shapeKind !== "arrow") {
+        var frow = h("div", "align-row");
+        [[true, "채우기"], [false, "윤곽선"]].forEach(function (f) {
+          var fb = h("button", null, { type: "button" });
+          fb.textContent = f[1];
+          if ((c.fill !== false) === f[0]) fb.style.borderColor = "var(--accent)";
+          fb.addEventListener("click", function () { c.fill = f[0]; render(); markDirty(); closeCtx(); });
+          frow.appendChild(fb);
+        });
+        m.appendChild(frow);
+      }
+    }
+
+    if (c.type === "icon") {
+      var icap = h("div", "sw-cap"); icap.textContent = "아이콘"; m.appendChild(icap);
+      var irow = h("div", "swatches");
+      ICON_SET.forEach(function (em) {
+        var ib = h("div", "sw icon-sw" + (c.emoji === em ? " on" : ""));
+        ib.textContent = em;
+        ib.addEventListener("click", function () { c.emoji = em; render(); markDirty(); closeCtx(); });
+        irow.appendChild(ib);
+      });
+      m.appendChild(irow);
+    }
 
     if (isLabel) {
       var cap2 = h("div", "sw-cap"); cap2.textContent = "글자색"; m.appendChild(cap2);
@@ -2166,10 +2309,12 @@
     if (type === "label") c.textColor = "white";
     if (type === "column") c.items = [{ id: uid("n"), text: "" }];
     if (type === "todo") c.items = [{ id: uid("i"), text: "", done: false }];
+    if (type === "shape") { c.shapeKind = "rect"; c.fill = true; }
+    if (type === "icon") { c.emoji = "📷"; }
     state.cards[c.id] = c;
     render(); select(c.id); markDirty();
     var el = cardLayer.querySelector('[data-id="' + c.id + '"]');
-    var f = el && el.querySelector(".card-title, .label-input");
+    var f = el && el.querySelector(".card-title, .label-input, .shape-label");
     if (f) f.focus();
     return c;
   }
@@ -3126,7 +3271,13 @@
   publishBtn.addEventListener("click", function () {
     if (publishing || readOnly) return;
     if (!artifactCap) {
-      toast("게시 기능을 사용할 수 없는 화면입니다. 변경사항은 이 브라우저에 저장돼요.");
+      // 게시 기능이 없는 화면(=지금 이 배포본)에서는 이 버튼이 "저장" 역할
+      saveDraftNow();
+      dirty = false;
+      publishBtn.classList.remove("dirty");
+      document.body.classList.remove("dirty");
+      updatePublishMeta();
+      toast("저장했습니다 ✓");
       return;
     }
     publishing = true;
@@ -3258,13 +3409,20 @@
     }
   } catch (e) {}
 
+  var SAVE_BTN_HTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3h8l3 3v10.5A1.5 1.5 0 0 1 15 18H5a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M6.5 3v4h6V3M6.5 18v-6h7v6"/></svg> 저장';
   function noCap() {
     artifactCap = null;
-    publishBtn.hidden = true;
+    standaloneMode = true;
+    // claude.ai 게시 기능이 없는 화면(=지금 이 배포본): "게시" 버튼을 즉시 로컬저장 버튼으로 사용
+    publishBtn.hidden = false;
+    publishBtn.disabled = false;
+    publishBtn.innerHTML = SAVE_BTN_HTML;
+    publishBtn.title = "지금까지 작업한 내용을 이 브라우저에 즉시 저장합니다";
     if (!readOnly) {
       modeBadge.hidden = false;
       modeBadge.textContent = "로컬 전용";
     }
+    updatePublishMeta();
   }
   publishBtn.disabled = true;
   publishBtn.title = "게시 기능 확인 중…";
