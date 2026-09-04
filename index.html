@@ -1909,7 +1909,8 @@
       var arow = h("div", "align-row");
       [["left", "왼쪽"], ["cx", "가로 중앙"], ["right", "오른쪽"],
        ["top", "위"], ["cy", "세로 중앙"], ["bottom", "아래"],
-       ["dh", "가로 균등"], ["dv", "세로 균등"]].forEach(function (m2) {
+       ["dh", "가로 균등"], ["dv", "세로 균등"],
+       ["row", "한 줄로 펼치기"], ["col", "한 열로 펼치기"]].forEach(function (m2) {
         var ab = h("button", null, { type: "button" }); ab.textContent = m2[1];
         ab.addEventListener("click", function () { alignSelection(m2[0]); closeCtx(); });
         arow.appendChild(ab);
@@ -2201,6 +2202,18 @@
         if (horiz) { c.x = Math.round(pos); pos += c.w + gap; }
         else { c.y = Math.round(pos); pos += c.h + gap; }
       });
+    } else if (mode === "row" || mode === "col") {
+      // 겹쳐 쌓인 카드들을 한 줄/한 열로 펼치기 — 현재 겹친 폭과 무관하게 항상 간격을 벌림
+      // (쌓인 순서 = z값 순서를 그대로 좌→우/위→아래 순서로 사용)
+      var SP = 24;
+      var order = cs.slice().sort(function (a, b) { return (a.z || 0) - (b.z || 0); });
+      if (mode === "row") {
+        var rx = minX;
+        order.forEach(function (c) { c.x = Math.round(rx); c.y = minY; rx += c.w + SP; });
+      } else {
+        var cy2 = minY;
+        order.forEach(function (c) { c.y = Math.round(cy2); c.x = minX; cy2 += c.h + SP; });
+      }
     } else {
       var cx = (minX + maxR) / 2, cy = (minY + maxB) / 2;
       cs.forEach(function (c) {
