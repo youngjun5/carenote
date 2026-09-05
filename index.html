@@ -616,11 +616,152 @@
   #cnSync.err { color: var(--danger); border-color: rgba(224,104,90,0.55); }
   #cnAdminBtn { position: fixed; right: 12px; bottom: 12px; z-index: 141; font: 600 11px "IBM Plex Sans", sans-serif; padding: 6px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--hair-strong); color: var(--ink-soft); cursor: pointer; box-shadow: var(--shadow-1); }
   #cnAdminBtn:hover { color: var(--ink); border-color: var(--accent); }
+
+  /* ---- 홈 (프로젝트 목록) ---- */
+  #home { position: fixed; inset: 0; background: var(--ground); overflow: auto; z-index: 50; }
+  #homeTop {
+    position: sticky; top: 0; height: 50px; z-index: 5; display: flex; align-items: center; gap: 12px;
+    padding: 0 16px; background: var(--surface); border-bottom: 1px solid var(--hair);
+  }
+  #homeTop .spacer { flex: 1 1 auto; }
+  #homeBody { max-width: 980px; margin: 0 auto; padding: 40px 24px 80px; }
+  #homeBody h1 {
+    font-family: "Bricolage Grotesque", sans-serif; font-size: 20px; font-weight: 700;
+    margin: 0 0 20px; color: var(--ink);
+  }
+  #homeGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+  #homeGrid .board-card {
+    background: var(--surface); border: 1px solid var(--hair); border-radius: 12px; padding: 18px;
+    cursor: pointer; transition: border-color .15s, transform .15s; min-height: 110px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  #homeGrid .board-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  #homeGrid .bc-title { font-weight: 600; font-size: 15px; color: var(--ink); word-break: break-word; }
+  #homeGrid .bc-meta { font-size: 12px; color: var(--ink-faint); margin-top: 8px; }
+  #homeGrid .board-card.new-board {
+    display: flex; align-items: center; justify-content: center; color: var(--ink-soft);
+    border-style: dashed; font-weight: 600;
+  }
+  #homeEmpty { color: var(--ink-faint); font-size: 13px; }
 </style>
+
+<div id="home" hidden>
+  <div id="homeTop">
+    <span class="wordmark">CARE NOTE<span class="dot">.</span></span>
+    <span class="spacer"></span>
+  </div>
+  <div id="homeBody">
+    <h1>내 프로젝트</h1>
+    <div id="homeGrid"><div id="homeEmpty">불러오는 중…</div></div>
+  </div>
+</div>
+
+<script>
+  // 여러 프로젝트(보드) 라우팅: #board/<id> 이면 그 프로젝트, 아니면 홈(목록) 화면.
+  window.__CN_ROUTE = (function () {
+    var m = location.hash.match(/^#board\/([A-Za-z0-9_-]+)/);
+    return m ? { view: "board", id: m[1] } : { view: "home" };
+  })();
+  window.__CN_BOARD_ID = window.__CN_ROUTE.view === "board" ? window.__CN_ROUTE.id : "default";
+
+  window.__cnRenderHome = function () {
+    document.title = "케어노트 — 내 프로젝트";
+    var SB_URL = "https://mgvqhrdhshpuamihfvnp.supabase.co";
+    var SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ndnFocmRoc2hwdWFtaWhmdm5wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2MTE4NjQsImV4cCI6MjEwNDE4Nzg2NH0.fjDJuG-47YHU63lydUSZGAGg3FQ-DLGLp9ufnJ4SN30";
+    var ADMIN_LS = "carenote:adminkey";
+    var grid = document.getElementById("homeGrid");
+    var adminKey = null;
+    try { adminKey = localStorage.getItem(ADMIN_LS); } catch (e) {}
+    var isAdmin = !!adminKey;
+
+    function fmtAgo(iso) {
+      if (!iso) return "";
+      var s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+      if (s < 60) return "방금 전";
+      if (s < 3600) return Math.floor(s / 60) + "분 전";
+      if (s < 86400) return Math.floor(s / 3600) + "시간 전";
+      return Math.floor(s / 86400) + "일 전";
+    }
+
+    function createBoard() {
+      var title = window.prompt("새 프로젝트 이름을 입력하세요", "새 프로젝트");
+      if (title == null) return;
+      title = title.trim() || "새 프로젝트";
+      var id = "b" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      fetch(SB_URL + "/rest/v1/boards", {
+        method: "POST",
+        headers: {
+          apikey: SB_ANON, Authorization: "Bearer " + SB_ANON, "x-admin-key": adminKey || "",
+          "Content-Type": "application/json", Prefer: "return=representation"
+        },
+        body: JSON.stringify({ id: id, title: title, content: { rev: 0, title: title, cards: {}, conns: {}, ink: [], zTop: 1 }, rev: 0 })
+      }).then(function (r) {
+        if (!r.ok) { alert("생성 실패 — 비밀문구를 확인하세요."); return; }
+        location.hash = "#board/" + id;
+        location.reload();
+      }).catch(function () { alert("네트워크 오류로 생성하지 못했습니다."); });
+    }
+
+    function render(list) {
+      grid.innerHTML = "";
+      if (!list.length && !isAdmin) {
+        grid.innerHTML = '<div id="homeEmpty">아직 프로젝트가 없습니다.</div>';
+        return;
+      }
+      list.sort(function (a, b) { return (b.updated_at || "").localeCompare(a.updated_at || ""); });
+      list.forEach(function (b) {
+        var el = document.createElement("div");
+        el.className = "board-card";
+        var t = document.createElement("div"); t.className = "bc-title"; t.textContent = b.title || "제목 없음";
+        var m = document.createElement("div"); m.className = "bc-meta"; m.textContent = fmtAgo(b.updated_at);
+        el.appendChild(t); el.appendChild(m);
+        el.addEventListener("click", function () { location.hash = "#board/" + b.id; location.reload(); });
+        grid.appendChild(el);
+      });
+      if (isAdmin) {
+        var nb = document.createElement("div");
+        nb.className = "board-card new-board";
+        nb.textContent = "+ 새 프로젝트";
+        nb.addEventListener("click", createBoard);
+        grid.appendChild(nb);
+      }
+    }
+
+    fetch(SB_URL + "/rest/v1/boards?select=id,title,updated_at", {
+      headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON }
+    })
+      .then(function (r) {
+        if (!r.ok) return r.text().then(function (t) { throw new Error(t); });
+        return r.json();
+      })
+      .then(render)
+      .catch(function (e) {
+        console.warn("[cn] home list error", e);
+        grid.innerHTML = '<div id="homeEmpty">목록을 불러오지 못했습니다.</div>';
+      });
+
+    var abtn = document.createElement("button");
+    abtn.id = "cnAdminBtn";
+    abtn.textContent = isAdmin ? "관리자 해제" : "편집";
+    abtn.addEventListener("click", function () {
+      if (isAdmin) { try { localStorage.removeItem(ADMIN_LS); } catch (e) {} location.reload(); return; }
+      var k = window.prompt("관리자 비밀문구를 입력하세요 (편집하려면):", "");
+      if (k == null) return;
+      k = k.trim(); if (!k) return;
+      try { localStorage.setItem(ADMIN_LS, k); } catch (e) {}
+      location.reload();
+    });
+    document.body.appendChild(abtn);
+  };
+</script>
 
 <div id="app">
   <header id="topbar">
     <span class="wordmark">CARE NOTE<span class="dot">.</span></span>
+    <button class="tbtn" id="homeBtn" title="홈 (내 프로젝트 목록)">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 9.5 10 3l7 6.5M5 8v8a1 1 0 0 0 1 1h3v-5h2v5h3a1 1 0 0 0 1-1V8"/></svg>
+      홈
+    </button>
     <input id="boardTitle" value="" placeholder="보드 이름" spellcheck="false" autocomplete="off">
     <span class="dirtydot" title="저장되지 않은 변경사항"></span>
     <div class="topbar-sep"></div>
@@ -780,11 +921,13 @@
   var MIN_SIZE = { note: [160, 90], todo: [170, 90], column: [170, 110], image: [56, 40], link: [170, 90], label: [120, 40] };
 
   var PATH = location.pathname;
+  // 여러 프로젝트(보드) 지원: 프로젝트별로 초안/뷰를 따로 저장합니다.
+  var CN_BOARD_ID = (window.__CN_BOARD_ID || "default");
   // 초안 저장 키는 "고정"이어야 합니다. 예전엔 location.pathname을 붙였는데,
   // 아티팩트 프레임은 새 버전마다 pathname이 바뀌어서 새로고침되면 초안을 못 찾았습니다.
   var DRAFT_PREFIX = "contiboard:draft";
-  var DRAFT_KEY = "contiboard:draft:v2";
-  var VIEW_KEY = "contiboard:view:v2";
+  var DRAFT_KEY = "contiboard:draft:v2:" + CN_BOARD_ID;
+  var VIEW_KEY = "contiboard:view:v2:" + CN_BOARD_ID;
   var THEME_KEY = "contiboard:theme";
 
   // ---------- state ----------
@@ -802,6 +945,16 @@
   } catch (e) { mobileView = window.innerWidth < 760; }
   if (mobileView) readOnly = true;
   var artifactCap = null;
+
+  // 홈(프로젝트 목록) 화면이면 캔버스/카드 로직은 아예 실행하지 않음
+  if (window.__CN_ROUTE && window.__CN_ROUTE.view === "home") {
+    document.getElementById("home").hidden = false;
+    document.getElementById("app").hidden = true;
+    if (window.__cnRenderHome) window.__cnRenderHome();
+    return;
+  }
+  var homeBtnEl = document.getElementById("homeBtn");
+  if (homeBtnEl) homeBtnEl.addEventListener("click", function () { location.hash = "#home"; location.reload(); });
 
   var restoredDraft = false, restoredAt = 0;
   (function loadDraft() {
@@ -1387,8 +1540,11 @@
         imgEl.src = c.src;
         imgEl.addEventListener("error", function () { c.src = ""; rebuildCard(c.id); });
         if (readOnly) {
-          // 보기 전용: 이미지 위 터치는 캔버스로 흘려보내 화면 이동 가능, 탭하면 크게 보기
-          imgEl.addEventListener("click", function () { openImageViewer(c); });
+          // 보기 전용: 이미지 위 터치는 캔버스로 흘려보내 화면 이동/확대축소 가능, 그대로 탭하면 크게 보기
+          imgEl.addEventListener("click", function () {
+            if (touchDragged) { touchDragged = false; return; }   // 방금 이동/확대축소였으면 탭으로 취급 안 함
+            openImageViewer(c);
+          });
         } else {
           makeDraggable(imgEl, c, function () { openImageViewer(c); });
         }
@@ -2630,17 +2786,19 @@
     canvas.addEventListener("pointerup", up);
   }
   // ---------- 터치(모바일): 한 손가락 = 화면 이동, 두 손가락 = 확대/축소 ----------
-  var gPts = {}, gest = null;
+  var gPts = {}, gest = null, touchDragged = false;
   function tDist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
   function tMid(a, b) { return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
 
   canvas.addEventListener("pointerdown", function (e) {
     var onCardOrUI = e.target.closest(".card") || e.target.closest(".ctxmenu") || e.target.closest("#conns") ||
         e.target.closest("#connEdit") || e.target.closest("#connDel") || e.target.closest("#drawBar");
-    // 보기 전용(모바일)에서는 카드 위 터치도 화면 이동으로 (이미지 탭 확대는 img click 이 따로 처리)
-    var mvTouchPan = readOnly && e.pointerType === "touch" && !e.target.closest(".img-el") &&
+    // 보기 전용(모바일)에서는 카드·이미지 위 터치도 화면 이동으로 (이미지는 탭↔드래그 구분: 그대로 떼면 크게 보기, 움직이면 이동)
+    var mvTouchPan = readOnly && e.pointerType === "touch" &&
         !e.target.closest(".ctxmenu") && !e.target.closest("#connDel");
-    if (onCardOrUI && !mvTouchPan) return;
+    // 핀치의 두번째 손가락이 카드/이미지 위에 떨어져도 항상 확대·축소로 인정 (한 손가락이 이미 추적 중일 때)
+    var isPinchFinger = e.pointerType === "touch" && Object.keys(gPts).length === 1;
+    if (onCardOrUI && !mvTouchPan && !isPinchFinger) return;
     closeCtx();
     if (drawMode) return;   // #drawCapture 가 처리
 
@@ -2649,6 +2807,7 @@
       try { canvas.setPointerCapture(e.pointerId); } catch (er) {}
       var ids = Object.keys(gPts);
       if (ids.length === 1) {
+        touchDragged = false;
         gest = { mode: "pan", sx: e.clientX, sy: e.clientY, ox: view.x, oy: view.y };
         canvas.classList.add("panning");
         deselect();
@@ -2673,10 +2832,13 @@
     gPts[e.pointerId] = { x: e.clientX, y: e.clientY };
     var ids = Object.keys(gPts);
     if (gest.mode === "pan" && ids.length === 1) {
-      view.x = gest.ox + (e.clientX - gest.sx);
-      view.y = gest.oy + (e.clientY - gest.sy);
+      var dx = e.clientX - gest.sx, dy = e.clientY - gest.sy;
+      if (!touchDragged && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) touchDragged = true;
+      view.x = gest.ox + dx;
+      view.y = gest.oy + dy;
       applyView();
     } else if (gest.mode === "pinch" && ids.length >= 2) {
+      touchDragged = true;   // 핀치는 항상 "드래그"로 취급 — 탭 확대 억제
       var a = gPts[ids[0]], b = gPts[ids[1]];
       var nd = tDist(a, b), nm = tMid(a, b);
       var ns = clamp(gest.s0 * (nd / gest.d0), 0.2, 2.5);
@@ -3213,6 +3375,7 @@
   var SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ndnFocmRoc2hwdWFtaWhmdm5wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2MTE4NjQsImV4cCI6MjEwNDE4Nzg2NH0.fjDJuG-47YHU63lydUSZGAGg3FQ-DLGLp9ufnJ4SN30";
   var ADMIN_LS = "carenote:adminkey";
   var BUCKET = "board-images";
+  var CN_BOARD_ID = window.__CN_BOARD_ID || "default";
 
   function whenReady(fn) {
     if (window.__cn) fn();
@@ -3287,7 +3450,7 @@
     });
 
     function fetchBoard() {
-      return read.from("board").select("content,rev").eq("id", 1).single().then(function (r) {
+      return read.from("boards").select("content,rev").eq("id", CN_BOARD_ID).single().then(function (r) {
         if (r.error) throw r.error;
         return r.data;
       });
@@ -3296,8 +3459,8 @@
     // --- 실시간: 변경 감지되면 서버에서 다시 읽어와 반영 (payload 크기 무관) ---
     function subscribe() {
       try {
-        read.channel("cn-board")
-          .on("postgres_changes", { event: "*", schema: "public", table: "board", filter: "id=eq.1" }, function () {
+        read.channel("cn-board-" + CN_BOARD_ID)
+          .on("postgres_changes", { event: "*", schema: "public", table: "boards", filter: "id=eq." + CN_BOARD_ID }, function () {
             fetchBoard().then(function (row) {
               if (!row || (row.rev || 0) <= myRev) return;
               if (isAdmin && cn.isDirty()) {
@@ -3365,7 +3528,7 @@
         var nextRev = myRev + 1;
         content.rev = nextRev;
         setBadge("저장 중…", "warn");
-        return admin.from("board").update({ content: content, rev: nextRev, updated_at: new Date().toISOString() }).eq("id", 1)
+        return admin.from("boards").update({ title: content.title || "새 프로젝트", content: content, rev: nextRev, updated_at: new Date().toISOString() }).eq("id", CN_BOARD_ID)
           .then(function (r) {
             if (r.error) throw r.error;
             myRev = nextRev;
