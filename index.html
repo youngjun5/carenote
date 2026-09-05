@@ -622,6 +622,7 @@
   body.mv #canvas { left: 0; }
   body.mv #recoverBtn,
   body.mv #publishBtn,
+  body.mv #shareExportBtn,
   body.mv #fitBtn,
   body.mv #themeBtn,
   body.mv .dirtydot,
@@ -722,6 +723,10 @@
     <button class="tbtn" id="publishBtn" title="현재 보드를 팀이 볼 수 있게 게시합니다">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M10 14V4M10 4 6 8M10 4l4 4M4 15v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-1"/></svg>
       팀에 게시
+    </button>
+    <button class="tbtn" id="shareExportBtn" title="지금 상태를 파일로 내보내서 링크로 공유되는 화면에 반영 요청">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="6" cy="10" r="2.3"/><circle cx="15" cy="5" r="2.3"/><circle cx="15" cy="15" r="2.3"/><path d="M8 9l5-2.7M8 11l5 2.7"/></svg>
+      공유용 내보내기
     </button>
     <button id="mvEdit" type="button">편집하기</button>
   </header>
@@ -3433,6 +3438,33 @@
   var homeBtnEl = document.getElementById("homeBtn");
   if (homeBtnEl) homeBtnEl.onclick = function () { goTo("#home"); };
   touchBoardIndex(activeBoardId, state.title);
+
+  // 공유용 내보내기: 서버 없이, 지금 상태를 파일로 저장 → 사용자가 Claude에게
+  // "공유해줘"라고 알려주면 그 파일을 읽어서 실제 배포 페이지(baseline)에 반영.
+  var shareExportBtn = document.getElementById("shareExportBtn");
+  if (shareExportBtn) shareExportBtn.addEventListener("click", function () {
+    try {
+      var payload = {
+        boardId: activeBoardId,
+        title: state.title || "새 보드",
+        exportedAt: now(),
+        state: JSON.parse(JSON.stringify(state))
+      };
+      var json = JSON.stringify(payload);
+      var blob = new Blob([json], { type: "application/json" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = "carenote-share-" + activeBoardId + ".json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+      toast("다운로드 폴더에 저장됐어요. Claude에게 '공유해줘'라고 말씀하시면 링크 화면에 반영해드려요.", null, null, 8000);
+    } catch (e) {
+      toast("내보내기에 실패했어요: " + (e && e.message || e));
+    }
+  });
 
   // 복구 버튼
   document.getElementById("recoverBtn").addEventListener("click", openRecover);
