@@ -298,16 +298,6 @@
     --c: var(--tape-slate);
   }
   .card.autoh { overflow: visible; }   /* 스크롤 없음 — 내용에 맞춰 아래로 늘어남 */
-  .card.cn-folded-hidden { display: none !important; }
-  .collapseToggle {
-    position: absolute; right: 6px; bottom: 6px; z-index: 6;
-    width: 22px; height: 22px; border-radius: 50%; padding: 0;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--surface); border: 1.5px solid var(--hair-strong); color: var(--ink-soft);
-    cursor: pointer; box-shadow: var(--shadow-1);
-  }
-  .collapseToggle:hover { color: var(--accent); border-color: var(--accent); }
-  .collapseToggle.folded { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
   .card::before {
     content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--c);
   }
@@ -1442,73 +1432,6 @@
   var selectedConn = null;
   function isSel(id) { return selectedIds.indexOf(id) >= 0; }
 
-  // ---------- 연결 접기/펼치기 ----------
-  // 뷰어도 사용 가능 — 서버에는 저장 안 하고 이 브라우저(프로젝트별)에만 기억함.
-  var FOLD_KEY = "carenote:folded:" + CN_BOARD_ID;
-  var collapsedRoots = (function () {
-    try { return new Set(JSON.parse(localStorage.getItem(FOLD_KEY) || "[]")); } catch (e) { return new Set(); }
-  })();
-  function saveCollapsed() {
-    try { localStorage.setItem(FOLD_KEY, JSON.stringify(Array.from(collapsedRoots))); } catch (e) {}
-  }
-  function childrenOf(id) {
-    var out = [];
-    Object.keys(state.conns).forEach(function (k) {
-      var cn = state.conns[k];
-      if (cn.from === id) out.push(cn.to);
-    });
-    return out;
-  }
-  function countDescendants(id) {
-    var seen = {}, stack = childrenOf(id).slice(), n = 0;
-    while (stack.length) {
-      var cid = stack.pop();
-      if (seen[cid] || !state.cards[cid]) continue;
-      seen[cid] = true; n++;
-      childrenOf(cid).forEach(function (x) { stack.push(x); });
-    }
-    return n;
-  }
-  var hiddenSet = {};   // render()에서 채워짐: renderConns()도 참고
-  function computeHiddenSet() {
-    var hidden = {};
-    collapsedRoots.forEach(function (rootId) {
-      if (!state.cards[rootId]) return;
-      var stack = childrenOf(rootId).slice();
-      while (stack.length) {
-        var id = stack.pop();
-        if (hidden[id] || !state.cards[id]) continue;
-        hidden[id] = true;
-        childrenOf(id).forEach(function (cid) { stack.push(cid); });
-      }
-    });
-    return hidden;
-  }
-  function toggleFold(id) {
-    if (collapsedRoots.has(id)) collapsedRoots.delete(id); else collapsedRoots.add(id);
-    saveCollapsed();
-    render();
-  }
-  function syncFoldToggle(el, c) {
-    var kids = childrenOf(c.id);
-    var btn = el.querySelector(".collapseToggle");
-    if (!kids.length) { if (btn) btn.remove(); return; }
-    if (!btn) {
-      btn = document.createElement("button");
-      btn.className = "collapseToggle";
-      btn.type = "button";
-      btn.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
-      btn.addEventListener("click", function (e) { e.stopPropagation(); toggleFold(c.id); });
-      el.appendChild(btn);
-    }
-    var folded = collapsedRoots.has(c.id);
-    btn.classList.toggle("folded", folded);
-    btn.title = folded ? ("펼치기 (" + countDescendants(c.id) + "개 숨겨짐)") : "이 카드에 연결된 것들 접기";
-    btn.innerHTML = folded
-      ? '<svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 2.5 8 6l-4 3.5"/></svg>'
-      : '<svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2.5 4 6 8l3.5-4"/></svg>';
-  }
-
   function render() {
     var ids = Object.keys(state.cards);
     emptyHint.style.display = ids.length ? "none" : "grid";
@@ -1516,13 +1439,10 @@
     Array.prototype.slice.call(cardLayer.children).forEach(function (el) {
       if (!state.cards[el.dataset.id]) el.remove();
     });
-    hiddenSet = computeHiddenSet();
     cardArr().forEach(function (c) {
       var el = cardLayer.querySelector('[data-id="' + c.id + '"]');
       if (!el) { el = buildCard(c); cardLayer.appendChild(el); el.classList.add("spawn"); }
       syncCard(el, c);
-      el.classList.toggle("cn-folded-hidden", !!hiddenSet[c.id]);
-      syncFoldToggle(el, c);
     });
     renderConns();
     renderInk();
@@ -2651,7 +2571,6 @@
     connEdit.innerHTML = "";
     Object.keys(state.conns).forEach(function (k) {
       var cn = state.conns[k];
-      if (hiddenSet[cn.from] || hiddenSet[cn.to]) return;   // 접힌 가지에 딸린 연결선은 그리지 않음
       var g = connGeom(cn);
       if (!g) { delete state.conns[k]; return; }
       var sel = selectedConn === k;
@@ -2876,7 +2795,7 @@
         e.target.closest("#connEdit") || e.target.closest("#connDel") || e.target.closest("#drawBar");
     // 보기 전용(모바일)에서는 카드·이미지 위 터치도 화면 이동으로 (이미지는 탭↔드래그 구분: 그대로 떼면 크게 보기, 움직이면 이동)
     var mvTouchPan = readOnly && e.pointerType === "touch" &&
-        !e.target.closest(".ctxmenu") && !e.target.closest("#connDel") && !e.target.closest(".collapseToggle");
+        !e.target.closest(".ctxmenu") && !e.target.closest("#connDel");
     // 핀치의 두번째 손가락이 카드/이미지 위에 떨어져도 항상 확대·축소로 인정 (한 손가락이 이미 추적 중일 때)
     var isPinchFinger = e.pointerType === "touch" && Object.keys(gPts).length === 1;
     if (onCardOrUI && !mvTouchPan && !isPinchFinger) return;
