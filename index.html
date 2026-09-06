@@ -668,11 +668,7 @@
     document.title = "케어노트 — 내 프로젝트";
     var SB_URL = "https://mgvqhrdhshpuamihfvnp.supabase.co";
     var SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ndnFocmRoc2hwdWFtaWhmdm5wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2MTE4NjQsImV4cCI6MjEwNDE4Nzg2NH0.fjDJuG-47YHU63lydUSZGAGg3FQ-DLGLp9ufnJ4SN30";
-    var ADMIN_LS = "carenote:adminkey";
     var grid = document.getElementById("homeGrid");
-    var adminKey = null;
-    try { adminKey = localStorage.getItem(ADMIN_LS); } catch (e) {}
-    var isAdmin = !!adminKey;
 
     function fmtAgo(iso) {
       if (!iso) return "";
@@ -691,12 +687,12 @@
       fetch(SB_URL + "/rest/v1/boards", {
         method: "POST",
         headers: {
-          apikey: SB_ANON, Authorization: "Bearer " + SB_ANON, "x-admin-key": adminKey || "",
+          apikey: SB_ANON, Authorization: "Bearer " + SB_ANON,
           "Content-Type": "application/json", Prefer: "return=representation"
         },
         body: JSON.stringify({ id: id, title: title, content: { rev: 0, title: title, cards: {}, conns: {}, ink: [], zTop: 1 }, rev: 0 })
       }).then(function (r) {
-        if (!r.ok) { alert("생성 실패 — 비밀문구를 확인하세요."); return; }
+        if (!r.ok) { alert("생성 실패 — 잠시 후 다시 시도해주세요."); return; }
         location.hash = "#board/" + id;
         location.reload();
       }).catch(function () { alert("네트워크 오류로 생성하지 못했습니다."); });
@@ -704,10 +700,6 @@
 
     function render(list) {
       grid.innerHTML = "";
-      if (!list.length && !isAdmin) {
-        grid.innerHTML = '<div id="homeEmpty">아직 프로젝트가 없습니다.</div>';
-        return;
-      }
       list.sort(function (a, b) { return (b.updated_at || "").localeCompare(a.updated_at || ""); });
       list.forEach(function (b) {
         var el = document.createElement("div");
@@ -718,13 +710,11 @@
         el.addEventListener("click", function () { location.hash = "#board/" + b.id; location.reload(); });
         grid.appendChild(el);
       });
-      if (isAdmin) {
-        var nb = document.createElement("div");
-        nb.className = "board-card new-board";
-        nb.textContent = "+ 새 프로젝트";
-        nb.addEventListener("click", createBoard);
-        grid.appendChild(nb);
-      }
+      var nb = document.createElement("div");
+      nb.className = "board-card new-board";
+      nb.textContent = "+ 새 프로젝트";
+      nb.addEventListener("click", createBoard);
+      grid.appendChild(nb);
     }
 
     fetch(SB_URL + "/rest/v1/boards?select=id,title,updated_at", {
@@ -739,19 +729,6 @@
         console.warn("[cn] home list error", e);
         grid.innerHTML = '<div id="homeEmpty">목록을 불러오지 못했습니다.</div>';
       });
-
-    var abtn = document.createElement("button");
-    abtn.id = "cnAdminBtn";
-    abtn.textContent = isAdmin ? "관리자 해제" : "편집";
-    abtn.addEventListener("click", function () {
-      if (isAdmin) { try { localStorage.removeItem(ADMIN_LS); } catch (e) {} location.reload(); return; }
-      var k = window.prompt("관리자 비밀문구를 입력하세요 (편집하려면):", "");
-      if (k == null) return;
-      k = k.trim(); if (!k) return;
-      try { localStorage.setItem(ADMIN_LS, k); } catch (e) {}
-      location.reload();
-    });
-    document.body.appendChild(abtn);
   };
 </script>
 
@@ -3373,7 +3350,6 @@
 (function () {
   var SB_URL = "https://mgvqhrdhshpuamihfvnp.supabase.co";
   var SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ndnFocmRoc2hwdWFtaWhmdm5wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2MTE4NjQsImV4cCI6MjEwNDE4Nzg2NH0.fjDJuG-47YHU63lydUSZGAGg3FQ-DLGLp9ufnJ4SN30";
-  var ADMIN_LS = "carenote:adminkey";
   var BUCKET = "board-images";
   var CN_BOARD_ID = window.__CN_BOARD_ID || "default";
 
@@ -3393,38 +3369,11 @@
       return;
     }
 
-    var read = window.supabase.createClient(SB_URL, SB_ANON, { auth: { persistSession: false } });
-    var adminKey = null;
-    try { adminKey = localStorage.getItem(ADMIN_LS); } catch (e) {}
-    var isAdmin = !!adminKey;
-    var admin = isAdmin ? window.supabase.createClient(SB_URL, SB_ANON, {
-      auth: { persistSession: false },
-      global: { headers: { "x-admin-key": adminKey } }
-    }) : null;
+    // 누구나 편집 가능 — 관리자 구분 없이 하나의 클라이언트로 읽기·쓰기 모두 처리
+    var db = window.supabase.createClient(SB_URL, SB_ANON, { auth: { persistSession: false } });
+    var read = db;
 
     var myRev = 0, pushTimer = null, pushing = false, again = false;
-
-    // --- 관리자 로그인 / 해제 버튼 ---
-    function promptKey() {
-      var k = window.prompt("관리자 비밀문구를 입력하세요 (편집하려면):", "");
-      if (k == null) return;
-      k = k.trim(); if (!k) return;
-      try { localStorage.setItem(ADMIN_LS, k); } catch (e) {}
-      location.reload();
-    }
-    var abtn = document.createElement("button");
-    abtn.id = "cnAdminBtn";
-    if (isAdmin) {
-      abtn.textContent = "관리자 해제";
-      abtn.addEventListener("click", function () {
-        try { localStorage.removeItem(ADMIN_LS); } catch (e) {}
-        location.reload();
-      });
-    } else {
-      abtn.textContent = "편집";
-      abtn.addEventListener("click", promptKey);
-    }
-    document.body.appendChild(abtn);
 
     // --- 초기 로드 ---
     setBadge("연결 중…", "warn");
@@ -3432,21 +3381,12 @@
       var hasContent = row && row.content && typeof row.content === "object" &&
         Object.keys(row.content.cards || {}).length > 0;
       myRev = row ? (row.rev || 0) : 0;
-      if (hasContent) {
-        cn.applyRemote(row.content);
-        setBadge(isAdmin ? "동기화됨" : "실시간 보기", "ok");
-      } else if (isAdmin && !cn.isEmpty()) {
-        setBadge("서버 비어있음", "warn");
-        cn.toast("이 브라우저의 보드를 서버에 올려서 팀과 공유할까요? (최초 1회)", "서버에 올리기", function () { pushNow(true); }, 25000);
-      } else {
-        setBadge(isAdmin ? "새 보드 — 편집하면 자동 저장" : "아직 공유된 내용이 없어요", "warn");
-      }
-      if (!isAdmin) cn.setViewer();
+      setBadge(hasContent ? "동기화됨" : "새 보드 — 편집하면 자동 저장", hasContent ? "ok" : "warn");
+      if (hasContent) cn.applyRemote(row.content);
       subscribe();
     }).catch(function (err) {
       console.warn("[cn] load error", err);
       setBadge("서버 연결 실패 — 로컬만 저장", "err");
-      if (!isAdmin) cn.setViewer();
     });
 
     function fetchBoard() {
@@ -3463,29 +3403,25 @@
           .on("postgres_changes", { event: "*", schema: "public", table: "boards", filter: "id=eq." + CN_BOARD_ID }, function () {
             fetchBoard().then(function (row) {
               if (!row || (row.rev || 0) <= myRev) return;
-              if (isAdmin && cn.isDirty()) {
-                cn.toast("다른 기기에서 보드가 갱신됐습니다.", "새로고침", function () { location.reload(); }, 15000);
+              if (cn.isDirty()) {
+                cn.toast("다른 사람이 방금 이 보드를 수정했습니다.", "새로고침", function () { location.reload(); }, 15000);
                 return;
               }
               myRev = row.rev || 0;
               cn.applyRemote(row.content);
-              setBadge(isAdmin ? "동기화됨" : "실시간 보기", "ok");
+              setBadge("동기화됨", "ok");
             }).catch(function () {});
           })
-          .subscribe(function (st) {
-            if (st === "SUBSCRIBED" && !isAdmin) setBadge("실시간 보기", "ok");
-          });
+          .subscribe();
       } catch (e) { console.warn("[cn] subscribe fail", e); }
     }
 
-    // --- 관리자 저장 트리거 ---
-    if (isAdmin) {
-      cn.onDirty(function () {
-        clearTimeout(pushTimer);
-        setBadge("저장 대기…", "warn");
-        pushTimer = setTimeout(function () { pushNow(false); }, 1400);
-      });
-    }
+    // --- 저장 트리거 (누구나) ---
+    cn.onDirty(function () {
+      clearTimeout(pushTimer);
+      setBadge("저장 대기…", "warn");
+      pushTimer = setTimeout(function () { pushNow(); }, 1400);
+    });
 
     function extOf(u) {
       var m = /^data:image\/([a-z0-9.+-]+);/i.exec(u || "");
@@ -3507,10 +3443,10 @@
         return chain.then(function () {
           var blob; try { blob = toBlob(c.src); } catch (e) { return; }
           var path = "img/" + c.id + "." + extOf(c.src);
-          return admin.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: true, cacheControl: "31536000" })
+          return db.storage.from(BUCKET).upload(path, blob, { contentType: blob.type, upsert: true, cacheControl: "31536000" })
             .then(function (r) {
               if (r.error) { console.warn("[cn] upload", c.id, r.error); return; }
-              var pub = read.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+              var pub = db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
               cn.setImageSrc(c.id, pub);
             })
             .then(function () { done++; setBadge("이미지 업로드 중… (" + done + "/" + imgs.length + ")", "warn"); });
@@ -3518,8 +3454,7 @@
       }, Promise.resolve());
     }
 
-    function pushNow(migration) {
-      if (!isAdmin) return;
+    function pushNow() {
       if (pushing) { again = true; return; }
       pushing = true; clearTimeout(pushTimer);
       uploadImages().then(function () {
@@ -3528,27 +3463,20 @@
         var nextRev = myRev + 1;
         content.rev = nextRev;
         setBadge("저장 중…", "warn");
-        return admin.from("boards").update({ title: content.title || "새 프로젝트", content: content, rev: nextRev, updated_at: new Date().toISOString() }).eq("id", CN_BOARD_ID)
+        return db.from("boards").update({ title: content.title || "새 프로젝트", content: content, rev: nextRev, updated_at: new Date().toISOString() }).eq("id", CN_BOARD_ID)
           .then(function (r) {
             if (r.error) throw r.error;
             myRev = nextRev;
             cn.markSynced();
             setBadge("동기화됨", "ok");
-            if (migration) cn.toast("서버에 올렸습니다. 이제 공유 링크로 팀이 실시간으로 봅니다.");
           });
       }).catch(function (err) {
         console.warn("[cn] push error", err);
-        var s = String((err && (err.message || err.code || err.error)) || err);
-        if (/row-level|permission|policy|42501|401|403/i.test(s)) {
-          setBadge("저장 권한 없음 — 비밀문구 확인", "err");
-          cn.toast("관리자 비밀문구가 틀렸습니다.", "다시 입력", promptKey, 20000);
-        } else {
-          setBadge("저장 실패 — 재시도 중…", "err");
-          setTimeout(function () { if (cn.isDirty()) pushNow(false); }, 5000);
-        }
+        setBadge("저장 실패 — 재시도 중…", "err");
+        setTimeout(function () { if (cn.isDirty()) pushNow(); }, 5000);
       }).then(function () {
         pushing = false;
-        if (again) { again = false; pushNow(false); }
+        if (again) { again = false; pushNow(); }
       });
     }
   });
