@@ -219,6 +219,18 @@
   .linkcard .k { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--ink-faint); }
   .linkcard .v { font-weight: 700; margin-top: 3px; font-size: 16px; }
 
+  .worksheet {
+    min-height: 200px; background: var(--card); border: 1px solid var(--line-strong); box-shadow: var(--shadow);
+    padding: 20px 24px; font-size: 15.5px; line-height: 1.9; white-space: pre-wrap; outline: none;
+  }
+  .worksheet:focus { border-color: var(--stamp-ink); box-shadow: var(--shadow), 0 0 0 3px var(--stamp); }
+  .worksheet:empty::before { content: attr(data-placeholder); color: var(--ink-faint); }
+  .ws-clear {
+    margin-top: 10px; font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--ink-faint);
+    background: none; border: 1px solid var(--line-strong); padding: 5px 12px; cursor: pointer;
+  }
+  .ws-clear:hover { color: var(--danger); border-color: var(--danger); }
+
   .contingency {
     border: 1.5px dashed var(--danger); padding: 20px 24px; color: var(--danger); font-size: 15px; font-weight: 600;
     background: var(--danger-bg);
@@ -475,7 +487,14 @@
   </section>
 
   <section>
-    <div class="sec-head"><span class="sec-no">07</span><h2>우발상황</h2></div>
+    <div class="sec-head"><span class="sec-no">07</span><h2>인터뷰 질문지</h2></div>
+    <p class="sec-note">아래 칸을 클릭해서 자유롭게 작성하세요 — 이 브라우저에 자동 저장됩니다.</p>
+    <div class="worksheet" id="interviewSheet" contenteditable="true" data-placeholder="여기를 눌러 인터뷰 질문을 작성하세요…"></div>
+    <button class="ws-clear" id="interviewClear" type="button">비우기</button>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-no">08</span><h2>우발상황</h2></div>
     <div class="contingency">아직 작성된 내용이 없습니다 — 케어노트 보드에서 채워주세요.</div>
   </section>
 
@@ -496,6 +515,29 @@
         save();
       });
     });
+  })();
+
+  (function () {
+    var KEY = "gncd-interview-questions-v1";
+    var sheet = document.getElementById("interviewSheet");
+    var clearBtn = document.getElementById("interviewClear");
+    if (!sheet) return;
+    try { sheet.textContent = localStorage.getItem(KEY) || ""; } catch (e) {}
+    var timer = null;
+    sheet.addEventListener("input", function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        try { localStorage.setItem(KEY, sheet.textContent); } catch (e) {}
+      }, 300);
+    });
+    if (clearBtn) {
+      clearBtn.addEventListener("click", function () {
+        if (!confirm("작성한 질문을 모두 지울까요?")) return;
+        sheet.textContent = "";
+        try { localStorage.setItem(KEY, ""); } catch (e) {}
+        sheet.focus();
+      });
+    }
   })();
 </script>
 </body>
