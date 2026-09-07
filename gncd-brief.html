@@ -184,9 +184,8 @@
   .shot-block { margin-bottom: 30px; }
   .shot-block h4 { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
   .shot-block .who { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--ink-faint); margin: 0 0 10px; }
-  .gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; }
-  .gal img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border: 1px solid var(--line-strong); display: block; background: var(--paper-2); }
-  .gal.wide img { aspect-ratio: 16/10; }
+  .gal { columns: 3 150px; column-gap: 6px; }
+  .gal img { width: 100%; height: auto; display: block; margin: 0 0 6px; border: 1px solid var(--line-strong); background: var(--paper-2); break-inside: avoid; }
 
   /* ---------- gear/links row ---------- */
   .linkrow { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
@@ -313,6 +312,9 @@
   <section>
     <div class="sec-head"><span class="sec-no">03</span><h2>촬영 포지션</h2></div>
     <img class="floorplan" src="https://mgvqhrdhshpuamihfvnp.supabase.co/storage/v1/object/public/board-images/img/cfakyvey.jpg" alt="촬영 포지션 도면">
+    <a class="linkcard" href="./camera-layout.html" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
+      <span><span class="k mono">INTERACTIVE</span><br><span class="v">2D·3D 카메라 배치 도구 크게 보기 ↗</span></span>
+    </a>
     <div class="cam-grid">
       <div class="cam"><div class="cam-badge" style="background:var(--a)">A</div><div><div class="cam-name">영준 — 짐벌</div><div class="cam-spec">55mm · 무대</div></div></div>
       <div class="cam"><div class="cam-badge" style="background:var(--b)">B</div><div><div class="cam-name">영준 — 중앙 뒤 고정캠</div><div class="cam-spec">28mm · 풀샷</div></div></div>
