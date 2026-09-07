@@ -179,7 +179,7 @@
 
   /* ---------- camera positions ---------- */
   .floorplan { display: block; width: 100%; border: 1px solid var(--line-strong); box-shadow: var(--shadow); margin-bottom: 22px; background: #fff; }
-  .cam-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .cam-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
   .cam {
     display: grid; grid-template-columns: 46px 1fr; gap: 16px; align-items: center;
     background: var(--card); border: 1px solid var(--line-strong); padding: 14px 18px;
@@ -198,10 +198,20 @@
     color: var(--ink-faint); margin: 0 0 10px; border-bottom: 1px solid var(--line-strong); padding-bottom: 7px;
   }
   .gear-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 7px 18px; margin: 0; padding: 0; list-style: none; }
-  .gear-list li { position: relative; padding-left: 26px; font-size: 15px; }
+  .gear-list li {
+    position: relative; padding-left: 26px; font-size: 15px; cursor: pointer; user-select: none;
+  }
   .gear-list li::before {
     content: ""; position: absolute; left: 0; top: 4px; width: 15px; height: 15px;
     border: 1.5px solid var(--line-strong);
+  }
+  .gear-list li.done {
+    color: var(--ink-faint); text-decoration: line-through; text-decoration-thickness: 1.5px;
+  }
+  .gear-list li.done::before { background: var(--ink-faint); border-color: var(--ink-faint); }
+  .gear-list li.done::after {
+    content: ""; position: absolute; left: 3px; top: 8px; width: 8px; height: 4px;
+    border-left: 1.5px solid var(--card); border-bottom: 1.5px solid var(--card); transform: rotate(-45deg);
   }
 
   /* ---------- reference shots ---------- */
@@ -508,13 +518,12 @@
   <footer>케어노트 "GNCD" 보드 · 자동 정리본</footer>
 </div>
 <script>
-  (function () {
-    var KEY = "gncd-checklist-v1";
+  function wireChecklist(key, selector, prefix) {
     var done = {};
-    try { done = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) {}
-    function save() { try { localStorage.setItem(KEY, JSON.stringify(done)); } catch (e) {} }
-    document.querySelectorAll(".phase li").forEach(function (li, i) {
-      var id = "p" + i;
+    try { done = JSON.parse(localStorage.getItem(key) || "{}"); } catch (e) {}
+    function save() { try { localStorage.setItem(key, JSON.stringify(done)); } catch (e) {} }
+    document.querySelectorAll(selector).forEach(function (li, i) {
+      var id = prefix + i;
       if (done[id]) li.classList.add("done");
       li.addEventListener("click", function () {
         li.classList.toggle("done");
@@ -522,7 +531,9 @@
         save();
       });
     });
-  })();
+  }
+  wireChecklist("gncd-checklist-v1", ".phase li", "p");
+  wireChecklist("gncd-gear-checklist-v1", ".gear-list li", "g");
 
   function wireWorksheet(key, sheetId, clearId, clearMsg) {
     var sheet = document.getElementById(sheetId);
