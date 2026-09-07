@@ -159,11 +159,22 @@
   .phase ul { margin: 0; padding: 10px 16px 14px; list-style: none; }
   .phase li {
     position: relative; padding: 7px 0 7px 26px; font-size: 14.5px; line-height: 1.45; border-bottom: 1px solid var(--line);
+    cursor: pointer; user-select: none;
   }
   .phase li:last-child { border-bottom: none; }
   .phase li::before {
     content: ""; position: absolute; left: 2px; top: 10px; width: 11px; height: 11px;
     border: 1.5px solid var(--line-strong); background: var(--paper);
+  }
+  .phase li.done {
+    color: var(--ink-faint); text-decoration: line-through; text-decoration-thickness: 1.5px;
+  }
+  .phase li.done::before {
+    background: var(--ink-faint); border-color: var(--ink-faint);
+  }
+  .phase li.done::after {
+    content: ""; position: absolute; left: 4.5px; top: 12px; width: 6px; height: 3px;
+    border-left: 1.5px solid var(--card); border-bottom: 1.5px solid var(--card); transform: rotate(-45deg);
   }
 
   /* ---------- camera positions ---------- */
@@ -470,5 +481,22 @@
 
   <footer>케어노트 "GNCD" 보드 · 자동 정리본</footer>
 </div>
+<script>
+  (function () {
+    var KEY = "gncd-checklist-v1";
+    var done = {};
+    try { done = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) {}
+    function save() { try { localStorage.setItem(KEY, JSON.stringify(done)); } catch (e) {} }
+    document.querySelectorAll(".phase li").forEach(function (li, i) {
+      var id = "p" + i;
+      if (done[id]) li.classList.add("done");
+      li.addEventListener("click", function () {
+        li.classList.toggle("done");
+        done[id] = li.classList.contains("done");
+        save();
+      });
+    });
+  })();
+</script>
 </body>
 </html>
