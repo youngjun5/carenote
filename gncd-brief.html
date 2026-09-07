@@ -266,6 +266,13 @@
   <hr class="tear">
 
   <section>
+    <div class="sec-head"><span class="sec-no" style="background:var(--danger);color:#fff;">NOTICE</span><h2>공지사항</h2></div>
+    <p class="sec-note">아래 칸을 클릭해서 자유롭게 작성하세요 — 이 브라우저에 자동 저장됩니다.</p>
+    <div class="worksheet" id="noticeSheet" contenteditable="true" data-placeholder="여기를 눌러 공지사항을 작성하세요…"></div>
+    <button class="ws-clear" id="noticeClear" type="button">비우기</button>
+  </section>
+
+  <section>
     <div class="sec-head"><span class="sec-no">01</span><h2>당일 타임테이블</h2></div>
     <div class="timeline">
       <div class="trow"><div class="t mono">13:30–15:20</div><div class="d">테크 확인 (음향 / 조명 / 영상)</div></div>
@@ -517,28 +524,29 @@
     });
   })();
 
-  (function () {
-    var KEY = "gncd-interview-questions-v1";
-    var sheet = document.getElementById("interviewSheet");
-    var clearBtn = document.getElementById("interviewClear");
+  function wireWorksheet(key, sheetId, clearId, clearMsg) {
+    var sheet = document.getElementById(sheetId);
+    var clearBtn = document.getElementById(clearId);
     if (!sheet) return;
-    try { sheet.textContent = localStorage.getItem(KEY) || ""; } catch (e) {}
+    try { sheet.textContent = localStorage.getItem(key) || ""; } catch (e) {}
     var timer = null;
     sheet.addEventListener("input", function () {
       clearTimeout(timer);
       timer = setTimeout(function () {
-        try { localStorage.setItem(KEY, sheet.textContent); } catch (e) {}
+        try { localStorage.setItem(key, sheet.textContent); } catch (e) {}
       }, 300);
     });
     if (clearBtn) {
       clearBtn.addEventListener("click", function () {
-        if (!confirm("작성한 질문을 모두 지울까요?")) return;
+        if (!confirm(clearMsg)) return;
         sheet.textContent = "";
-        try { localStorage.setItem(KEY, ""); } catch (e) {}
+        try { localStorage.setItem(key, ""); } catch (e) {}
         sheet.focus();
       });
     }
-  })();
+  }
+  wireWorksheet("gncd-notice-v1", "noticeSheet", "noticeClear", "작성한 공지사항을 모두 지울까요?");
+  wireWorksheet("gncd-interview-questions-v1", "interviewSheet", "interviewClear", "작성한 질문을 모두 지울까요?");
 </script>
 </body>
 </html>
