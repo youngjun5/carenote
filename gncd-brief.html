@@ -178,7 +178,7 @@
   }
 
   /* ---------- camera positions ---------- */
-  .floorplan { display: block; width: 100%; border: 1px solid var(--line-strong); box-shadow: var(--shadow); margin-bottom: 22px; background: #fff; }
+  .cam-frame { display: block; width: 100%; border: 1px solid var(--line-strong); box-shadow: var(--shadow); margin-bottom: 22px; background: #fff; }
   .cam-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
   .cam {
     display: grid; grid-template-columns: 46px 1fr; gap: 16px; align-items: center;
@@ -188,8 +188,10 @@
     width: 46px; height: 46px; display: flex; align-items: center; justify-content: center;
     font-family: "Black Han Sans", sans-serif; font-size: 21px; color: #fff;
   }
-  .cam-name { font-weight: 700; font-size: 16.5px; }
-  .cam-spec { font-family: "IBM Plex Mono", monospace; font-size: 13px; color: var(--ink-soft); margin-top: 3px; }
+  .cam-name { font-weight: 700; font-size: 16.5px; outline: none; border-radius: 2px; }
+  .cam-spec { font-family: "IBM Plex Mono", monospace; font-size: 13px; color: var(--ink-soft); margin-top: 3px; outline: none; border-radius: 2px; }
+  .cam-name:focus, .cam-spec:focus { box-shadow: 0 0 0 2px var(--stamp); }
+  .cam-name:hover, .cam-spec:hover { background: var(--paper-2); }
 
   /* ---------- checklist ---------- */
   .gear-groups { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); align-items: start; }
@@ -213,6 +215,18 @@
     content: ""; position: absolute; left: 3px; top: 8px; width: 8px; height: 4px;
     border-left: 1.5px solid var(--card); border-bottom: 1.5px solid var(--card); transform: rotate(-45deg);
   }
+  .gear-add { margin-top: 10px; display: flex; gap: 6px; }
+  .gear-add-input {
+    flex: 1; min-width: 0; font: inherit; font-size: 14px; border: 1px dashed var(--line-strong);
+    background: transparent; padding: 7px 10px; color: var(--ink);
+  }
+  .gear-add-input::placeholder { color: var(--ink-faint); }
+  .gear-add-input:focus { outline: none; border-color: var(--stamp-ink); border-style: solid; }
+  .gear-add-btn {
+    font-family: "IBM Plex Mono", monospace; font-size: 12px; border: 1px solid var(--line-strong);
+    background: var(--card); padding: 7px 14px; cursor: pointer; color: var(--ink-soft);
+  }
+  .gear-add-btn:hover { color: var(--ink); border-color: var(--stamp-ink); }
 
   /* ---------- reference shots ---------- */
   .shot-block { margin-bottom: 34px; }
@@ -366,16 +380,14 @@
 
   <section>
     <div class="sec-head"><span class="sec-no">03</span><h2>촬영 포지션</h2></div>
-    <img class="floorplan" src="https://mgvqhrdhshpuamihfvnp.supabase.co/storage/v1/object/public/board-images/img/cfakyvey.jpg" alt="촬영 포지션 도면">
-    <a class="linkcard" href="./camera-layout.html" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
-      <span><span class="k mono">INTERACTIVE</span><br><span class="v">2D·3D 카메라 배치 도구 크게 보기 ↗</span></span>
-    </a>
+    <p class="sec-note">아래에서 2D·3D를 전환해서 볼 수 있어요. 카메라 이름·스펙은 직접 눌러서 고칠 수 있습니다 (자동 저장).</p>
+    <iframe id="camFrame" class="cam-frame" src="./camera-layout.html" scrolling="no" title="카메라 배치 2D·3D"></iframe>
     <div class="cam-grid">
-      <div class="cam"><div class="cam-badge" style="background:var(--a)">A</div><div><div class="cam-name">영준 — 짐벌</div><div class="cam-spec">55mm · 무대</div></div></div>
-      <div class="cam"><div class="cam-badge" style="background:var(--b)">B</div><div><div class="cam-name">영준 — 중앙 뒤 고정캠</div><div class="cam-spec">28mm · 풀샷</div></div></div>
-      <div class="cam"><div class="cam-badge" style="background:var(--c)">C</div><div><div class="cam-name">지원 — 중앙 고정</div><div class="cam-spec">100mm · 무대 팔로우</div></div></div>
-      <div class="cam"><div class="cam-badge" style="background:var(--d)">D</div><div><div class="cam-name">예은 — 우측 고정</div><div class="cam-spec">100–400mm · 2–3샷 팔로우</div></div></div>
-      <div class="cam"><div class="cam-badge" style="background:var(--e)">E</div><div><div class="cam-name">사모님 — 좌측 고정</div><div class="cam-spec">100–400mm · 2–3샷 팔로우</div></div></div>
+      <div class="cam"><div class="cam-badge" style="background:var(--a)">A</div><div><div class="cam-name" contenteditable="true" data-k="cam-a-name">영준 — 짐벌</div><div class="cam-spec" contenteditable="true" data-k="cam-a-spec">55mm · 무대</div></div></div>
+      <div class="cam"><div class="cam-badge" style="background:var(--b)">B</div><div><div class="cam-name" contenteditable="true" data-k="cam-b-name">영준 — 중앙 뒤 고정캠</div><div class="cam-spec" contenteditable="true" data-k="cam-b-spec">28mm · 풀샷</div></div></div>
+      <div class="cam"><div class="cam-badge" style="background:var(--c)">C</div><div><div class="cam-name" contenteditable="true" data-k="cam-c-name">지원 — 중앙 고정</div><div class="cam-spec" contenteditable="true" data-k="cam-c-spec">100mm · 무대 팔로우</div></div></div>
+      <div class="cam"><div class="cam-badge" style="background:var(--d)">D</div><div><div class="cam-name" contenteditable="true" data-k="cam-d-name">예은 — 우측 고정</div><div class="cam-spec" contenteditable="true" data-k="cam-d-spec">100–400mm · 2–3샷 팔로우</div></div></div>
+      <div class="cam"><div class="cam-badge" style="background:var(--e)">E</div><div><div class="cam-name" contenteditable="true" data-k="cam-e-name">사모님 — 좌측 고정</div><div class="cam-spec" contenteditable="true" data-k="cam-e-spec">100–400mm · 2–3샷 팔로우</div></div></div>
     </div>
   </section>
 
@@ -395,6 +407,10 @@
           <li>충전기</li>
           <li>V마운트 3개</li>
         </ul>
+        <div class="gear-add">
+          <input type="text" class="gear-add-input" placeholder="+ 항목 추가 (Enter)">
+          <button type="button" class="gear-add-btn">추가</button>
+        </div>
       </div>
       <div class="gear-group">
         <h4>오디오</h4>
@@ -406,6 +422,10 @@
           <li>이어폰</li>
           <li>무전기</li>
         </ul>
+        <div class="gear-add">
+          <input type="text" class="gear-add-input" placeholder="+ 항목 추가 (Enter)">
+          <button type="button" class="gear-add-btn">추가</button>
+        </div>
       </div>
       <div class="gear-group">
         <h4>대여 품목 <span class="mono" style="text-transform:none;color:var(--ink-faint);">— 데이페이 합정</span></h4>
@@ -415,6 +435,10 @@
           <li>삼각대 1</li>
           <li>배터리 3 / 충전기 3</li>
         </ul>
+        <div class="gear-add">
+          <input type="text" class="gear-add-input" placeholder="+ 항목 추가 (Enter)">
+          <button type="button" class="gear-add-btn">추가</button>
+        </div>
       </div>
     </div>
   </section>
@@ -533,7 +557,58 @@
     });
   }
   wireChecklist("gncd-checklist-v1", ".phase li", "p");
-  wireChecklist("gncd-gear-checklist-v1", ".gear-list li", "g");
+
+  // 촬영 장비: 체크(취소선) + 항목 추가
+  (function () {
+    var DONE_KEY = "gncd-gear-checklist-v2";
+    var EXTRA_KEY = "gncd-gear-extra-v1";
+    var done = {}, extra = {};
+    try { done = JSON.parse(localStorage.getItem(DONE_KEY) || "{}"); } catch (e) {}
+    try { extra = JSON.parse(localStorage.getItem(EXTRA_KEY) || "{}"); } catch (e) {}
+    function saveDone() { try { localStorage.setItem(DONE_KEY, JSON.stringify(done)); } catch (e) {} }
+    function saveExtra() { try { localStorage.setItem(EXTRA_KEY, JSON.stringify(extra)); } catch (e) {} }
+    function wireLi(li, id) {
+      if (done[id]) li.classList.add("done");
+      li.addEventListener("click", function () {
+        li.classList.toggle("done");
+        done[id] = li.classList.contains("done");
+        saveDone();
+      });
+    }
+    document.querySelectorAll(".gear-group").forEach(function (group, gi) {
+      var list = group.querySelector(".gear-list");
+      Array.prototype.slice.call(list.querySelectorAll("li")).forEach(function (li, ii) {
+        wireLi(li, "b" + gi + "-" + ii);
+      });
+      (extra[gi] || []).forEach(function (text, ii) {
+        var li = document.createElement("li");
+        li.textContent = text;
+        list.appendChild(li);
+        wireLi(li, "e" + gi + "-" + ii);
+      });
+      var input = group.querySelector(".gear-add-input");
+      var btn = group.querySelector(".gear-add-btn");
+      function addItem() {
+        if (!input) return;
+        var text = input.value.trim();
+        if (!text) return;
+        var arr = extra[gi] || (extra[gi] = []);
+        var ii = arr.length;
+        arr.push(text);
+        saveExtra();
+        var li = document.createElement("li");
+        li.textContent = text;
+        list.appendChild(li);
+        wireLi(li, "e" + gi + "-" + ii);
+        input.value = "";
+        input.focus();
+      }
+      if (btn) btn.addEventListener("click", addItem);
+      if (input) input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") { e.preventDefault(); addItem(); }
+      });
+    });
+  })();
 
   function wireWorksheet(key, sheetId, clearId, clearMsg) {
     var sheet = document.getElementById(sheetId);
@@ -558,6 +633,48 @@
   }
   wireWorksheet("gncd-notice-v1", "noticeSheet", "noticeClear", "작성한 공지사항을 모두 지울까요?");
   wireWorksheet("gncd-interview-questions-v1", "interviewSheet", "interviewClear", "작성한 질문을 모두 지울까요?");
+
+  // 카메라 이름/스펙 직접 편집
+  (function () {
+    var PREFIX = "gncd-cam-edit-";
+    document.querySelectorAll("[data-k]").forEach(function (el) {
+      var key = PREFIX + el.dataset.k;
+      try {
+        var saved = localStorage.getItem(key);
+        if (saved !== null) el.textContent = saved;
+      } catch (e) {}
+      el.addEventListener("blur", function () {
+        try { localStorage.setItem(key, el.textContent); } catch (e) {}
+      });
+      el.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") { e.preventDefault(); el.blur(); }
+      });
+    });
+  })();
+
+  // 카메라 배치 iframe 높이를 내용에 맞춰 자동 조절 (같은 출처라 접근 가능)
+  (function () {
+    var frame = document.getElementById("camFrame");
+    if (!frame) return;
+    function sync() {
+      try {
+        var h = frame.contentWindow.document.documentElement.scrollHeight;
+        if (h) frame.style.height = h + "px";
+      } catch (e) {}
+    }
+    frame.addEventListener("load", function () {
+      try {
+        var doc = frame.contentWindow.document;
+        var style = doc.createElement("style");
+        style.textContent = ".masthead, #plan-section > h2, #plan-section > .section-note, #notes-section, footer { display: none !important; }";
+        doc.head.appendChild(style);
+      } catch (e) {}
+      sync();
+      setTimeout(sync, 300);
+      try { frame.contentWindow.addEventListener("resize", sync); } catch (e) {}
+    });
+    window.addEventListener("resize", function () { setTimeout(sync, 200); });
+  })();
 </script>
 </body>
 </html>
