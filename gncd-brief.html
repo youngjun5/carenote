@@ -178,7 +178,7 @@
   }
 
   /* ---------- camera positions ---------- */
-  .cam-frame { display: block; width: 100%; border: 1px solid var(--line-strong); box-shadow: var(--shadow); margin-bottom: 22px; background: #fff; }
+  .cam-frame, .floorplan { display: block; width: 100%; border: 1px solid var(--line-strong); box-shadow: var(--shadow); margin-bottom: 22px; background: #fff; }
   .cam-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
   .cam {
     display: grid; grid-template-columns: 46px 1fr; gap: 16px; align-items: center;
@@ -201,12 +201,18 @@
   }
   .gear-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 7px 18px; margin: 0; padding: 0; list-style: none; }
   .gear-list li {
-    position: relative; padding-left: 26px; font-size: 15px; cursor: pointer; user-select: none;
+    position: relative; padding-left: 26px; padding-right: 20px; font-size: 15px; cursor: pointer; user-select: none;
   }
   .gear-list li::before {
     content: ""; position: absolute; left: 0; top: 4px; width: 15px; height: 15px;
     border: 1.5px solid var(--line-strong);
   }
+  .gear-del {
+    position: absolute; right: 0; top: 5px; width: 16px; height: 16px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-faint); cursor: pointer; font-size: 15px; line-height: 1;
+  }
+  .gear-del:hover { color: var(--danger); }
   .gear-list li.done {
     color: var(--ink-faint); text-decoration: line-through; text-decoration-thickness: 1.5px;
   }
@@ -380,8 +386,11 @@
 
   <section>
     <div class="sec-head"><span class="sec-no">03</span><h2>촬영 포지션</h2></div>
-    <p class="sec-note">아래에서 2D·3D를 전환해서 볼 수 있어요. 카메라 이름·스펙은 직접 눌러서 고칠 수 있습니다 (자동 저장).</p>
-    <iframe id="camFrame" class="cam-frame" src="./camera-layout.html" scrolling="no" title="카메라 배치 2D·3D"></iframe>
+    <p class="sec-note">카메라 이름·스펙은 직접 눌러서 고칠 수 있습니다 (자동 저장).</p>
+    <img class="floorplan" src="https://mgvqhrdhshpuamihfvnp.supabase.co/storage/v1/object/public/board-images/img/cfakyvey.jpg" alt="촬영 포지션 도면">
+    <a class="linkcard" href="./camera-layout.html" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
+      <span><span class="k mono">INTERACTIVE</span><br><span class="v">2D·3D 카메라 배치 도구 크게 보기 ↗</span></span>
+    </a>
     <div class="cam-grid">
       <div class="cam"><div class="cam-badge" style="background:var(--a)">A</div><div><div class="cam-name" contenteditable="true" data-k="cam-a-name">영준 — 짐벌</div><div class="cam-spec" contenteditable="true" data-k="cam-a-spec">55mm · 무대</div></div></div>
       <div class="cam"><div class="cam-badge" style="background:var(--b)">B</div><div><div class="cam-name" contenteditable="true" data-k="cam-b-name">영준 — 중앙 뒤 고정캠</div><div class="cam-spec" contenteditable="true" data-k="cam-b-spec">28mm · 풀샷</div></div></div>
@@ -558,33 +567,60 @@
   }
   wireChecklist("gncd-checklist-v1", ".phase li", "p");
 
-  // 촬영 장비: 체크(취소선) + 항목 추가
+  // 촬영 장비: 체크(취소선) + 항목 추가/삭제
   (function () {
     var DONE_KEY = "gncd-gear-checklist-v2";
-    var EXTRA_KEY = "gncd-gear-extra-v1";
-    var done = {}, extra = {};
+    var EXTRA_KEY = "gncd-gear-extra-v2";
+    var REMOVED_KEY = "gncd-gear-removed-v1";
+    var done = {}, extra = {}, removed = {};
     try { done = JSON.parse(localStorage.getItem(DONE_KEY) || "{}"); } catch (e) {}
     try { extra = JSON.parse(localStorage.getItem(EXTRA_KEY) || "{}"); } catch (e) {}
+    try { removed = JSON.parse(localStorage.getItem(REMOVED_KEY) || "{}"); } catch (e) {}
     function saveDone() { try { localStorage.setItem(DONE_KEY, JSON.stringify(done)); } catch (e) {} }
     function saveExtra() { try { localStorage.setItem(EXTRA_KEY, JSON.stringify(extra)); } catch (e) {} }
-    function wireLi(li, id) {
+    function saveRemoved() { try { localStorage.setItem(REMOVED_KEY, JSON.stringify(removed)); } catch (e) {} }
+
+    function wireLi(li, id, onDelete) {
       if (done[id]) li.classList.add("done");
-      li.addEventListener("click", function () {
+      li.addEventListener("click", function (e) {
+        if (e.target.classList.contains("gear-del")) return;
         li.classList.toggle("done");
         done[id] = li.classList.contains("done");
         saveDone();
       });
+      var del = document.createElement("span");
+      del.className = "gear-del";
+      del.textContent = "×";
+      del.title = "삭제";
+      del.addEventListener("click", function (e) {
+        e.stopPropagation();
+        delete done[id];
+        saveDone();
+        onDelete();
+        li.remove();
+      });
+      li.appendChild(del);
     }
+
     document.querySelectorAll(".gear-group").forEach(function (group, gi) {
       var list = group.querySelector(".gear-list");
+      var removedSet = removed[gi] || [];
       Array.prototype.slice.call(list.querySelectorAll("li")).forEach(function (li, ii) {
-        wireLi(li, "b" + gi + "-" + ii);
+        if (removedSet.indexOf(ii) !== -1) { li.remove(); return; }
+        wireLi(li, "b" + gi + "-" + ii, function () {
+          var arr = removed[gi] || (removed[gi] = []);
+          if (arr.indexOf(ii) === -1) arr.push(ii);
+          saveRemoved();
+        });
       });
-      (extra[gi] || []).forEach(function (text, ii) {
+      (extra[gi] || []).forEach(function (item) {
         var li = document.createElement("li");
-        li.textContent = text;
+        li.textContent = item.text;
         list.appendChild(li);
-        wireLi(li, "e" + gi + "-" + ii);
+        wireLi(li, "e" + item.id, function () {
+          extra[gi] = (extra[gi] || []).filter(function (x) { return x.id !== item.id; });
+          saveExtra();
+        });
       });
       var input = group.querySelector(".gear-add-input");
       var btn = group.querySelector(".gear-add-btn");
@@ -592,14 +628,17 @@
         if (!input) return;
         var text = input.value.trim();
         if (!text) return;
+        var id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
         var arr = extra[gi] || (extra[gi] = []);
-        var ii = arr.length;
-        arr.push(text);
+        arr.push({ id: id, text: text });
         saveExtra();
         var li = document.createElement("li");
         li.textContent = text;
         list.appendChild(li);
-        wireLi(li, "e" + gi + "-" + ii);
+        wireLi(li, "e" + id, function () {
+          extra[gi] = (extra[gi] || []).filter(function (x) { return x.id !== id; });
+          saveExtra();
+        });
         input.value = "";
         input.focus();
       }
@@ -652,29 +691,6 @@
     });
   })();
 
-  // 카메라 배치 iframe 높이를 내용에 맞춰 자동 조절 (같은 출처라 접근 가능)
-  (function () {
-    var frame = document.getElementById("camFrame");
-    if (!frame) return;
-    function sync() {
-      try {
-        var h = frame.contentWindow.document.documentElement.scrollHeight;
-        if (h) frame.style.height = h + "px";
-      } catch (e) {}
-    }
-    frame.addEventListener("load", function () {
-      try {
-        var doc = frame.contentWindow.document;
-        var style = doc.createElement("style");
-        style.textContent = ".masthead, #plan-section > h2, #plan-section > .section-note, #notes-section, footer { display: none !important; }";
-        doc.head.appendChild(style);
-      } catch (e) {}
-      sync();
-      setTimeout(sync, 300);
-      try { frame.contentWindow.addEventListener("resize", sync); } catch (e) {}
-    });
-    window.addEventListener("resize", function () { setTimeout(sync, 200); });
-  })();
 </script>
 </body>
 </html>
