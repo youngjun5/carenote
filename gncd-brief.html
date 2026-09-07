@@ -63,7 +63,7 @@
   html, body { margin: 0; }
   body {
     background: var(--paper); color: var(--ink);
-    font: 400 15px/1.7 "Noto Sans KR", sans-serif;
+    font: 400 16.5px/1.7 "Noto Sans KR", sans-serif;
     background-image: radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 0);
     background-size: 22px 22px;
   }
@@ -71,7 +71,7 @@
   a { color: inherit; }
   .mono { font-family: "IBM Plex Mono", monospace; }
 
-  .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px 100px; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 32px 100px; }
 
   /* ---------- cover ---------- */
   .cover {
@@ -83,42 +83,42 @@
   }
   .cover h1 {
     font-family: "Black Han Sans", sans-serif; font-weight: 400;
-    font-size: clamp(30px, 7vw, 46px); line-height: 1.18; margin: 0 0 10px; color: var(--ink);
+    font-size: clamp(34px, 5vw, 64px); line-height: 1.18; margin: 0 0 12px; color: var(--ink);
     text-wrap: balance;
   }
   .cover .sub {
-    font-family: "Black Han Sans", sans-serif; font-size: clamp(18px, 4vw, 24px);
-    color: var(--danger); margin: 0 0 28px; letter-spacing: 0.02em;
+    font-family: "Black Han Sans", sans-serif; font-size: clamp(20px, 3vw, 30px);
+    color: var(--danger); margin: 0 0 32px; letter-spacing: 0.02em;
   }
   .cover .facts {
-    display: inline-flex; flex-direction: column; gap: 7px; text-align: left;
+    display: inline-flex; flex-direction: column; gap: 9px; text-align: left;
     background: var(--card); border: 1px solid var(--line-strong); box-shadow: var(--shadow);
-    padding: 18px 26px; font-size: 13.5px; color: var(--ink-soft);
+    padding: 22px 32px; font-size: 15.5px; color: var(--ink-soft);
   }
   .cover .facts b { color: var(--ink); font-weight: 700; }
   .cover .teams {
-    margin-top: 22px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
+    margin-top: 24px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
   }
   .team-chip {
-    font-family: "IBM Plex Mono", monospace; font-size: 11.5px; font-weight: 600;
-    border: 1px solid var(--line-strong); padding: 5px 12px; border-radius: 999px; color: var(--ink-soft);
+    font-family: "IBM Plex Mono", monospace; font-size: 13px; font-weight: 600;
+    border: 1px solid var(--line-strong); padding: 6px 14px; border-radius: 999px; color: var(--ink-soft);
   }
   .poster {
-    display: block; width: 100%; max-width: 480px; margin: 26px auto 0;
+    display: block; width: 100%; max-width: 620px; margin: 30px auto 0;
     border: 1px solid var(--line-strong); box-shadow: var(--shadow);
   }
 
   /* ---------- section chrome ---------- */
-  section { margin: 54px 0; }
-  .sec-head { display: flex; align-items: baseline; gap: 12px; margin: 0 0 20px; }
+  section { margin: 60px 0; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; margin: 0 0 22px; }
   .sec-no {
-    font-family: "IBM Plex Mono", monospace; font-weight: 700; font-size: 12px;
-    color: var(--stamp-ink); background: var(--stamp); padding: 3px 8px; flex: none;
+    font-family: "IBM Plex Mono", monospace; font-weight: 700; font-size: 13px;
+    color: var(--stamp-ink); background: var(--stamp); padding: 4px 9px; flex: none;
   }
   .sec-head h2 {
-    font-family: "Black Han Sans", sans-serif; font-weight: 400; font-size: 22px; margin: 0; color: var(--ink);
+    font-family: "Black Han Sans", sans-serif; font-weight: 400; font-size: 27px; margin: 0; color: var(--ink);
   }
-  .sec-note { color: var(--ink-faint); font-size: 12.5px; margin: -12px 0 20px; }
+  .sec-note { color: var(--ink-faint); font-size: 14px; margin: -14px 0 22px; }
   hr.tear {
     border: none; height: 1px; background: var(--line);
     background-image: repeating-linear-gradient(90deg, var(--line-strong) 0 6px, transparent 6px 11px);
@@ -126,81 +126,94 @@
   }
 
   /* ---------- schedule ---------- */
-  .timeline { border-top: 1px solid var(--line); }
-  .trow { display: grid; grid-template-columns: 108px 1fr; gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--line); }
-  .trow .t { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 13px; color: var(--ink-soft); padding-top: 1px; }
-  .trow .d { font-weight: 500; }
+  .timeline { column-width: 340px; column-gap: 48px; border-top: 1px solid var(--line); }
+  .trow {
+    display: grid; grid-template-columns: 122px 1fr; gap: 14px; padding: 13px 0;
+    border-bottom: 1px solid var(--line); break-inside: avoid;
+  }
+  .trow .t { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 14.5px; color: var(--ink-soft); padding-top: 1px; }
+  .trow .d { font-weight: 500; font-size: 15.5px; }
 
   /* ---------- mission phases ---------- */
-  .phase { background: var(--card); border: 1px solid var(--line-strong); box-shadow: var(--shadow); margin-bottom: 16px; }
+  .phase-row {
+    display: flex; align-items: stretch; gap: 6px; overflow-x: auto; padding: 2px 2px 16px;
+    scrollbar-width: thin;
+  }
+  .phase {
+    flex: 1 1 260px; min-width: 240px; background: var(--card); border: 1px solid var(--line-strong); box-shadow: var(--shadow);
+  }
+  .arrow-right {
+    flex: 0 0 auto; align-self: center; color: var(--ink-faint); font-family: "IBM Plex Mono", monospace;
+    font-size: 18px; padding: 0 2px;
+  }
   .phase-head {
-    display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px dashed var(--line-strong);
+    display: flex; flex-direction: column; align-items: flex-start; gap: 7px; padding: 14px 16px; border-bottom: 1px dashed var(--line-strong);
   }
+  .phase-head .row1 { display: flex; align-items: center; gap: 8px; width: 100%; }
   .phase-tag {
-    font-family: "IBM Plex Mono", monospace; font-weight: 700; font-size: 11px; letter-spacing: 0.06em;
-    color: var(--paper); background: var(--ink); padding: 4px 9px;
+    font-family: "IBM Plex Mono", monospace; font-weight: 700; font-size: 12px; letter-spacing: 0.06em;
+    color: var(--paper); background: var(--ink); padding: 4px 10px;
   }
-  .phase-head h3 { margin: 0; font-size: 16px; font-weight: 700; }
-  .phase-head .n { margin-left: auto; font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--ink-faint); }
-  .phase ul { margin: 0; padding: 14px 18px 14px 0; list-style: none; }
+  .phase-head h3 { margin: 0; font-size: 17px; font-weight: 700; }
+  .phase-head .n { margin-left: auto; font-family: "IBM Plex Mono", monospace; font-size: 12.5px; color: var(--ink-faint); }
+  .phase ul { margin: 0; padding: 10px 16px 14px; list-style: none; }
   .phase li {
-    position: relative; padding: 6px 0 6px 30px; font-size: 14px; border-bottom: 1px solid var(--line);
+    position: relative; padding: 7px 0 7px 26px; font-size: 14.5px; line-height: 1.45; border-bottom: 1px solid var(--line);
   }
   .phase li:last-child { border-bottom: none; }
   .phase li::before {
-    content: ""; position: absolute; left: 6px; top: 11px; width: 12px; height: 12px;
+    content: ""; position: absolute; left: 2px; top: 10px; width: 11px; height: 11px;
     border: 1.5px solid var(--line-strong); background: var(--paper);
   }
-  .arrow-down { text-align: center; color: var(--ink-faint); font-family: "IBM Plex Mono", monospace; margin: -6px 0 16px; }
 
   /* ---------- camera positions ---------- */
   .floorplan { display: block; width: 100%; border: 1px solid var(--line-strong); box-shadow: var(--shadow); margin-bottom: 22px; background: #fff; }
-  .cam-grid { display: grid; gap: 10px; }
+  .cam-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
   .cam {
-    display: grid; grid-template-columns: 40px 1fr; gap: 14px; align-items: center;
-    background: var(--card); border: 1px solid var(--line-strong); padding: 12px 16px;
+    display: grid; grid-template-columns: 46px 1fr; gap: 16px; align-items: center;
+    background: var(--card); border: 1px solid var(--line-strong); padding: 14px 18px;
   }
   .cam-badge {
-    width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
-    font-family: "Black Han Sans", sans-serif; font-size: 19px; color: #fff;
+    width: 46px; height: 46px; display: flex; align-items: center; justify-content: center;
+    font-family: "Black Han Sans", sans-serif; font-size: 21px; color: #fff;
   }
-  .cam-name { font-weight: 700; font-size: 15px; }
-  .cam-spec { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+  .cam-name { font-weight: 700; font-size: 16.5px; }
+  .cam-spec { font-family: "IBM Plex Mono", monospace; font-size: 13px; color: var(--ink-soft); margin-top: 3px; }
 
   /* ---------- checklist ---------- */
-  .gear-groups { display: grid; gap: 22px; }
+  .gear-groups { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); align-items: start; }
   .gear-group h4 {
-    font-family: "IBM Plex Mono", monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--ink-faint); margin: 0 0 10px; border-bottom: 1px solid var(--line-strong); padding-bottom: 6px;
+    font-family: "IBM Plex Mono", monospace; font-size: 12.5px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-faint); margin: 0 0 10px; border-bottom: 1px solid var(--line-strong); padding-bottom: 7px;
   }
-  .gear-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px 16px; margin: 0; padding: 0; list-style: none; }
-  .gear-list li { position: relative; padding-left: 24px; font-size: 14px; }
+  .gear-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 7px 18px; margin: 0; padding: 0; list-style: none; }
+  .gear-list li { position: relative; padding-left: 26px; font-size: 15px; }
   .gear-list li::before {
-    content: ""; position: absolute; left: 0; top: 4px; width: 14px; height: 14px;
+    content: ""; position: absolute; left: 0; top: 4px; width: 15px; height: 15px;
     border: 1.5px solid var(--line-strong);
   }
 
   /* ---------- reference shots ---------- */
-  .shot-block { margin-bottom: 30px; }
-  .shot-block h4 { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
-  .shot-block .who { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--ink-faint); margin: 0 0 10px; }
-  .gal { columns: 3 150px; column-gap: 6px; }
-  .gal img { width: 100%; height: auto; display: block; margin: 0 0 6px; border: 1px solid var(--line-strong); background: var(--paper-2); break-inside: avoid; }
+  .shot-block { margin-bottom: 34px; }
+  .shot-block h4 { font-size: 16.5px; font-weight: 700; margin: 0 0 4px; }
+  .shot-block .who { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--ink-faint); margin: 0 0 12px; }
+  .gal { columns: 5 170px; column-gap: 8px; }
+  .gal img { width: 100%; height: auto; display: block; margin: 0 0 8px; border: 1px solid var(--line-strong); background: var(--paper-2); break-inside: avoid; }
 
   /* ---------- gear/links row ---------- */
-  .linkrow { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .linkrow { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
   .linkcard {
-    background: var(--card); border: 1px solid var(--line-strong); padding: 14px 16px; text-decoration: none; display: block;
+    background: var(--card); border: 1px solid var(--line-strong); padding: 18px 20px; text-decoration: none; display: block;
   }
-  .linkcard .k { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--ink-faint); }
-  .linkcard .v { font-weight: 700; margin-top: 2px; }
+  .linkcard .k { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--ink-faint); }
+  .linkcard .v { font-weight: 700; margin-top: 3px; font-size: 16px; }
 
   .contingency {
-    border: 1.5px dashed var(--danger); padding: 18px 20px; color: var(--danger); font-size: 13.5px; font-weight: 600;
+    border: 1.5px dashed var(--danger); padding: 20px 24px; color: var(--danger); font-size: 15px; font-weight: 600;
     background: var(--danger-bg);
   }
 
-  footer { text-align: center; color: var(--ink-faint); font-size: 12px; padding: 40px 0 0; }
+  footer { text-align: center; color: var(--ink-faint); font-size: 13px; padding: 44px 0 0; }
 
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -247,65 +260,67 @@
     <div class="sec-head"><span class="sec-no">02</span><h2>임무 흐름 — 5단계 작전</h2></div>
     <p class="sec-note">타임테이블 순서대로 이어지는 촬영팀 진행 단계입니다. 체크박스는 참고용 — 실제 체크는 각자 케어노트 보드에서.</p>
 
-    <div class="phase">
-      <div class="phase-head"><span class="phase-tag">PHASE A</span><h3>침투</h3><span class="n mono">3</span></div>
-      <ul>
-        <li>장비대여 (데이페이 합정)</li>
-        <li>선한목자교회 이동</li>
-        <li>예은, 지원 합류</li>
-      </ul>
-    </div>
-    <div class="arrow-down">↓</div>
+    <div class="phase-row">
+      <div class="phase">
+        <div class="phase-head"><span class="phase-tag">PHASE A</span><h3>침투</h3><span class="n mono">3</span></div>
+        <ul>
+          <li>장비대여 (데이페이 합정)</li>
+          <li>선한목자교회 이동</li>
+          <li>예은, 지원 합류</li>
+        </ul>
+      </div>
+      <div class="arrow-right">→</div>
 
-    <div class="phase">
-      <div class="phase-head"><span class="phase-tag">PHASE B</span><h3>구축</h3><span class="n mono">6</span></div>
-      <ul>
-        <li>음향팀에 레코더 전달 및 협조 요청</li>
-        <li>각 섹터 구도 체크 (도면 출력)</li>
-        <li>카메라 세팅 (5대)</li>
-        <li>배터리 분류 (더미 / V마운트)</li>
-        <li>충전기 세팅</li>
-        <li>무전기 세팅</li>
-      </ul>
-    </div>
-    <div class="arrow-down">↓</div>
+      <div class="phase">
+        <div class="phase-head"><span class="phase-tag">PHASE B</span><h3>구축</h3><span class="n mono">6</span></div>
+        <ul>
+          <li>음향팀에 레코더 전달 및 협조 요청</li>
+          <li>각 섹터 구도 체크 (도면 출력)</li>
+          <li>카메라 세팅 (5대)</li>
+          <li>배터리 분류 (더미 / V마운트)</li>
+          <li>충전기 세팅</li>
+          <li>무전기 세팅</li>
+        </ul>
+      </div>
+      <div class="arrow-right">→</div>
 
-    <div class="phase">
-      <div class="phase-head"><span class="phase-tag">PHASE C</span><h3>워게임 <span style="font-weight:400;color:var(--ink-faint);font-size:13px;">(본 행사)</span></h3><span class="n mono">8</span></div>
-      <ul>
-        <li>사회자</li>
-        <li>워십 (클로즈업 따기)</li>
-        <li>뮤지컬 (짐벌 들이대기)</li>
-        <li>영화</li>
-        <li>피드백 후 재세팅</li>
-        <li>식사 및 휴식</li>
-        <li>배터리 교체</li>
-        <li>인터뷰용 렌즈 · 마이크 준비</li>
-      </ul>
-    </div>
-    <div class="arrow-down">↓</div>
+      <div class="phase">
+        <div class="phase-head"><span class="phase-tag">PHASE C</span><h3>워게임 <span style="font-weight:400;color:var(--ink-faint);font-size:13px;">(본 행사)</span></h3><span class="n mono">8</span></div>
+        <ul>
+          <li>사회자</li>
+          <li>워십 (클로즈업 따기)</li>
+          <li>뮤지컬 (짐벌 들이대기)</li>
+          <li>영화</li>
+          <li>피드백 후 재세팅</li>
+          <li>식사 및 휴식</li>
+          <li>배터리 교체</li>
+          <li>인터뷰용 렌즈 · 마이크 준비</li>
+        </ul>
+      </div>
+      <div class="arrow-right">→</div>
 
-    <div class="phase">
-      <div class="phase-head"><span class="phase-tag">PHASE D</span><h3>임무시작 <span style="font-weight:400;color:var(--ink-faint);font-size:13px;">(인터뷰)</span></h3><span class="n mono">6</span></div>
-      <ul>
-        <li>관객 입장 시 인터뷰 요청 (질문지)</li>
-        <li>관객 입장 10분 전 스탠바이</li>
-        <li>1분 전 REC</li>
-        <li>우발상황시 무전 소통</li>
-        <li>뮤지컬 종료 후 인터뷰 준비</li>
-        <li>인터뷰 진행 (영준 / 예은, 지원)</li>
-      </ul>
-    </div>
-    <div class="arrow-down">↓</div>
+      <div class="phase">
+        <div class="phase-head"><span class="phase-tag">PHASE D</span><h3>임무시작 <span style="font-weight:400;color:var(--ink-faint);font-size:13px;">(인터뷰)</span></h3><span class="n mono">6</span></div>
+        <ul>
+          <li>관객 입장 시 인터뷰 요청 (질문지)</li>
+          <li>관객 입장 10분 전 스탠바이</li>
+          <li>1분 전 REC</li>
+          <li>우발상황시 무전 소통</li>
+          <li>뮤지컬 종료 후 인터뷰 준비</li>
+          <li>인터뷰 진행 (영준 / 예은, 지원)</li>
+        </ul>
+      </div>
+      <div class="arrow-right">→</div>
 
-    <div class="phase">
-      <div class="phase-head"><span class="phase-tag">PHASE E</span><h3>퇴출</h3><span class="n mono">5</span></div>
-      <ul>
-        <li>SD카드 수거</li>
-        <li>대여장비 체크</li>
-        <li>자가 장비 체크</li>
-        <li>장비 반납 (00시 전, 데이페이 합정)</li>
-      </ul>
+      <div class="phase">
+        <div class="phase-head"><span class="phase-tag">PHASE E</span><h3>퇴출</h3><span class="n mono">5</span></div>
+        <ul>
+          <li>SD카드 수거</li>
+          <li>대여장비 체크</li>
+          <li>자가 장비 체크</li>
+          <li>장비 반납 (00시 전, 데이페이 합정)</li>
+        </ul>
+      </div>
     </div>
   </section>
 
