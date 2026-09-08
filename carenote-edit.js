@@ -110,7 +110,16 @@
       }
 
       if (isAdmin) {
-        zones.forEach(function (z) { z.classList.add("ce-zone"); });
+        zones.forEach(function (z) {
+          z.classList.add("ce-zone");
+          // 표 셀처럼 "한 줄짜리" 구역은 Enter로 줄바꿈을 넣으면 그리드/표 구조가
+          // 깨지기 쉬우므로, Enter를 눌러도 줄바꿈 대신 편집만 마치게 한다.
+          if (z.hasAttribute("data-ek-line")) {
+            z.addEventListener("keydown", function (e) {
+              if (e.key === "Enter") { e.preventDefault(); z.blur(); }
+            });
+          }
+        });
         editBtn.addEventListener("click", function () { setEditing(!editing); });
         saveBtn.addEventListener("click", saveNow);
       } else {
