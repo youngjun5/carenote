@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <title>GNCDay 촬영 가이드</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="./gncd-manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="theme-color" content="#f4efe2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GNCD 가이드">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;600;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -564,6 +569,14 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
 <script src="./carenote-edit.js"></script>
+<script>
+  // Dock/홈화면에 설치해 둔 경우에도 항상 최신 버전이 뜨도록 서비스워커를 등록한다.
+  // (service-worker.js는 페이지 자체는 절대 캐시하지 않고 매번 네트워크에서 새로 받아오게 되어 있음
+  //  — 이게 없으면 설치된 앱을 지웠다 다시 추가해야만 최신 내용이 보이는 문제가 생긴다.)
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./service-worker.js").catch(function () {});
+  }
+</script>
 <script>
   // 공유 수정 내용이 반영된 뒤에 체크리스트 등을 연결해야
   // (수정 후) 실제 항목들을 올바르게 잡는다. 안전장치로 4.5초 뒤엔 무조건 실행.
