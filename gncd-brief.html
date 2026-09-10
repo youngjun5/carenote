@@ -133,11 +133,24 @@
   /* ---------- schedule ---------- */
   .timeline { max-width: 520px; border-top: 1px solid var(--line); }
   .trow {
-    display: grid; grid-template-columns: 122px 1fr; gap: 14px; padding: 13px 0;
+    display: grid; grid-template-columns: 20px 122px 1fr; gap: 14px; padding: 13px 0;
     border-bottom: 1px solid var(--line);
+    cursor: pointer; user-select: none;
   }
   .trow .t { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 14.5px; color: var(--ink-soft); padding-top: 1px; }
   .trow .d { font-weight: 500; font-size: 15.5px; }
+  .trow-check {
+    position: relative; width: 13px; height: 13px; margin-top: 2px;
+    border: 1.5px solid var(--line-strong); background: var(--paper); flex: 0 0 auto;
+  }
+  .trow.done .trow-check { background: var(--ink-faint); border-color: var(--ink-faint); }
+  .trow.done .trow-check::after {
+    content: ""; position: absolute; left: 2.5px; top: 3px; width: 6px; height: 3px;
+    border-left: 1.5px solid var(--card); border-bottom: 1.5px solid var(--card); transform: rotate(-45deg);
+  }
+  .trow.done .t, .trow.done .d {
+    color: var(--ink-faint); text-decoration: line-through; text-decoration-thickness: 1.5px;
+  }
 
   /* ---------- mission phases ---------- */
   .phase-row {
@@ -310,26 +323,26 @@
   <section>
     <div class="sec-head"><span class="sec-no">01</span><h2>당일 타임테이블</h2></div>
     <div class="timeline">
-      <div class="trow"><div class="t mono" data-ek="tt-t-0" data-ek-line="1">13:30–15:00</div><div class="d" data-ek="tt-d-0" data-ek-line="1">테크 확인 (음향 / 조명 / 영상)</div></div>
-      <div class="trow"><div class="t mono" data-ek="tt-t-1" data-ek-line="1">15:00–16:00</div><div class="d" data-ek="tt-d-1" data-ek-line="1">뮤지컬 리허설</div></div>
-      <div class="trow"><div class="t mono" data-ek="tt-t-2" data-ek-line="1">16:00–18:00</div><div class="d" data-ek="tt-d-2" data-ek-line="1">라이트온 WORSHIP 리허설</div></div>
-      <div class="trow"><div class="t mono" data-ek="tt-t-3" data-ek-line="1">18:00–18:15</div><div class="d" data-ek="tt-d-3" data-ek-line="1">영상 상영 체크 및 이보람목사님 마이크 테스트</div></div>
-      <div class="trow"><div class="t mono" data-ek="tt-t-4" data-ek-line="1">18:15–18:30</div><div class="d" data-ek="tt-d-4" data-ek-line="1">사회자 마이크 테스트</div></div>
-      <div class="trow"><div class="t mono" data-ek="tt-t-5" data-ek-line="1">18:30–19:30</div><div class="d" data-ek="tt-d-5" data-ek-line="1">관객 입장</div></div>
-      <div class="trow"><div class="t mono" data-ek="tt-t-6" data-ek-line="1">19:30–19:55</div><div class="d" data-ek="tt-d-6" data-ek-line="1">라이트온 WORSHIP — 라이트온</div></div>
-      <div class="trow"><div class="t mono" data-ek="tt-t-7" data-ek-line="1">19:55–20:00</div><div class="d" data-ek="tt-d-7" data-ek-line="1">사회 및 개회 — 윤성인선교사</div></div>
-      <div class="trow"><div class="t mono" data-ek="tt-t-8" data-ek-line="1">20:00–20:05</div><div class="d" data-ek="tt-d-8" data-ek-line="1">인사말 — GNCF 김경규대표</div></div>
-      <div class="trow"><div class="t mono" data-ek="tt-t-9" data-ek-line="1">20:05–20:07</div><div class="d" data-ek="tt-d-9" data-ek-line="1">시작기도 — GNCF 송주화목사</div></div>
-      <div class="trow"><div class="t mono" data-ek="tt-t-10" data-ek-line="1">20:07–20:10</div><div class="d" data-ek="tt-d-10" data-ek-line="1">단편 영화 소개 — 윤성인선교사</div></div>
-      <div class="trow"><div class="t mono" data-ek="tt-t-11" data-ek-line="1">20:10–20:50</div><div class="d" data-ek="tt-d-11" data-ek-line="1">I'm Fine No Thank You 상영 — 케어코너즈</div></div>
-      <div class="trow"><div class="t mono" data-ek="tt-t-12" data-ek-line="1">20:50–20:55</div><div class="d" data-ek="tt-d-12" data-ek-line="1">영화 메시지 — 케어코너즈 이보람목사</div></div>
-      <div class="trow"><div class="t mono" data-ek="tt-t-13" data-ek-line="1">20:55–20:57</div><div class="d" data-ek="tt-d-13" data-ek-line="1">단편 뮤지컬 소개 — 윤성인선교사</div></div>
-      <div class="trow"><div class="t mono" data-ek="tt-t-14" data-ek-line="1">20:57–21:27</div><div class="d" data-ek="tt-d-14" data-ek-line="1">My Peace 찬송 뮤지컬 시연 — 광야아트미니스트리</div></div>
-      <div class="trow"><div class="t mono" data-ek="tt-t-15" data-ek-line="1">21:27–21:37</div><div class="d" data-ek="tt-d-15" data-ek-line="1">뮤지컬 메시지 — 광야아트미니스트리 김관영목사</div></div>
-      <div class="trow"><div class="t mono" data-ek="tt-t-16" data-ek-line="1">21:37–21:47</div><div class="d" data-ek="tt-d-16" data-ek-line="1">찬양 및 기도 — 라이트온</div></div>
-      <div class="trow"><div class="t mono" data-ek="tt-t-17" data-ek-line="1">21:47–21:50</div><div class="d" data-ek="tt-d-17" data-ek-line="1">광고 — 윤성인선교사</div></div>
-      <div class="trow"><div class="t mono" data-ek="tt-t-18" data-ek-line="1">21:50–21:52</div><div class="d" data-ek="tt-d-18" data-ek-line="1">마침기도 — 선한목자교회 김다위목사</div></div>
-      <div class="trow"><div class="t mono" data-ek="tt-t-19" data-ek-line="1">21:52–22:30</div><div class="d" data-ek="tt-d-19" data-ek-line="1">뒷정리</div></div>
+      <div class="trow"><div class="trow-check"></div><div class="t mono" data-ek="tt-t-0" data-ek-line="1">13:30–15:00</div><div class="d" data-ek="tt-d-0" data-ek-line="1">테크 확인 (음향 / 조명 / 영상)</div></div>
+      <div class="trow"><div class="trow-check"></div><div class="t mono" data-ek="tt-t-1" data-ek-line="1">15:00–16:00</div><div class="d" data-ek="tt-d-1" data-ek-line="1">뮤지컬 리허설</div></div>
+      <div class="trow"><div class="trow-check"></div><div class="t mono" data-ek="tt-t-2" data-ek-line="1">16:00–18:00</div><div class="d" data-ek="tt-d-2" data-ek-line="1">라이트온 WORSHIP 리허설</div></div>
+      <div class="trow"><div class="trow-check"></div><div class="t mono" data-ek="tt-t-3" data-ek-line="1">18:00–18:15</div><div class="d" data-ek="tt-d-3" data-ek-line="1">영상 상영 체크 및 이보람목사님 마이크 테스트</div></div>
+      <div class="trow"><div class="trow-check"></div><div class="t mono" data-ek="tt-t-4" data-ek-line="1">18:15–18:30</div><div class="d" data-ek="tt-d-4" data-ek-line="1">사회자 마이크 테스트</div></div>
+      <div class="trow"><div class="trow-check"></div><div class="t mono" data-ek="tt-t-5" data-ek-line="1">18:30–19:30</div><div class="d" data-ek="tt-d-5" data-ek-line="1">관객 입장</div></div>
+      <div class="trow"><div class="trow-check"></div><div class="t mono" data-ek="tt-t-6" data-ek-line="1">19:30–19:55</div><div class="d" data-ek="tt-d-6" data-ek-line="1">라이트온 WORSHIP — 라이트온</div></div>
+      <div class="trow"><div class="trow-check"></div><div class="t mono" data-ek="tt-t-7" data-ek-line="1">19:55–20:00</div><div class="d" data-ek="tt-d-7" data-ek-line="1">사회 및 개회 — 윤성인선교사</div></div>
+      <div class="trow"><div class="trow-check"></div><div class="t mono" data-ek="tt-t-8" data-ek-line="1">20:00–20:05</div><div class="d" data-ek="tt-d-8" data-ek-line="1">인사말 — GNCF 김경규대표</div></div>
+      <div class="trow"><div class="trow-check"></div><div class="t mono" data-ek="tt-t-9" data-ek-line="1">20:05–20:07</div><div class="d" data-ek="tt-d-9" data-ek-line="1">시작기도 — GNCF 송주화목사</div></div>
+      <div class="trow"><div class="trow-check"></div><div class="t mono" data-ek="tt-t-10" data-ek-line="1">20:07–20:10</div><div class="d" data-ek="tt-d-10" data-ek-line="1">단편 영화 소개 — 윤성인선교사</div></div>
+      <div class="trow"><div class="trow-check"></div><div class="t mono" data-ek="tt-t-11" data-ek-line="1">20:10–20:50</div><div class="d" data-ek="tt-d-11" data-ek-line="1">I'm Fine No Thank You 상영 — 케어코너즈</div></div>
+      <div class="trow"><div class="trow-check"></div><div class="t mono" data-ek="tt-t-12" data-ek-line="1">20:50–20:55</div><div class="d" data-ek="tt-d-12" data-ek-line="1">영화 메시지 — 케어코너즈 이보람목사</div></div>
+      <div class="trow"><div class="trow-check"></div><div class="t mono" data-ek="tt-t-13" data-ek-line="1">20:55–20:57</div><div class="d" data-ek="tt-d-13" data-ek-line="1">단편 뮤지컬 소개 — 윤성인선교사</div></div>
+      <div class="trow"><div class="trow-check"></div><div class="t mono" data-ek="tt-t-14" data-ek-line="1">20:57–21:27</div><div class="d" data-ek="tt-d-14" data-ek-line="1">My Peace 찬송 뮤지컬 시연 — 광야아트미니스트리</div></div>
+      <div class="trow"><div class="trow-check"></div><div class="t mono" data-ek="tt-t-15" data-ek-line="1">21:27–21:37</div><div class="d" data-ek="tt-d-15" data-ek-line="1">뮤지컬 메시지 — 광야아트미니스트리 김관영목사</div></div>
+      <div class="trow"><div class="trow-check"></div><div class="t mono" data-ek="tt-t-16" data-ek-line="1">21:37–21:47</div><div class="d" data-ek="tt-d-16" data-ek-line="1">찬양 및 기도 — 라이트온</div></div>
+      <div class="trow"><div class="trow-check"></div><div class="t mono" data-ek="tt-t-17" data-ek-line="1">21:47–21:50</div><div class="d" data-ek="tt-d-17" data-ek-line="1">광고 — 윤성인선교사</div></div>
+      <div class="trow"><div class="trow-check"></div><div class="t mono" data-ek="tt-t-18" data-ek-line="1">21:50–21:52</div><div class="d" data-ek="tt-d-18" data-ek-line="1">마침기도 — 선한목자교회 김다위목사</div></div>
+      <div class="trow"><div class="trow-check"></div><div class="t mono" data-ek="tt-t-19" data-ek-line="1">21:52–22:30</div><div class="d" data-ek="tt-d-19" data-ek-line="1">뒷정리</div></div>
     </div>
   </section>
 
@@ -600,6 +613,7 @@
     });
   }
   wireChecklist("gncd-checklist-v1", ".phase li", "p");
+  wireChecklist("gncd-timetable-v1", ".trow", "tt");
 
   // 촬영 장비: 체크(취소선) + 항목 추가/삭제
   (function () {
