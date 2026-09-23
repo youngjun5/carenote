@@ -130,8 +130,11 @@ document.getElementById("scan").addEventListener("click", async function(){
 
   var idb = await readIDB();
   idb.forEach(function(x){
-    var b = 0; try { b = JSON.stringify(x.value).length; } catch(e){ b = -1; }
-    found.push({ source:"IndexedDB", key:x.key, value:x.value, bytes:b });
+    var v = x.value, b = 0;
+    // IndexedDB 값이 JSON 문자열로 저장돼 있는 경우가 있어 풀어준다
+    if (typeof v === "string") { b = v.length; try { v = JSON.parse(v); } catch(e){} }
+    else { try { b = JSON.stringify(v).length; } catch(e){ b = -1; } }
+    found.push({ source:"IndexedDB", key:x.key, value:v, bytes:b });
   });
 
   FOUND = { takenAt: new Date().toISOString(), origin: location.origin,
